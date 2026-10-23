@@ -288,53 +288,9 @@
         function onStalled() {
           armStall();
         }
-        var playAttempts = 0;
-        var playFailed = false;
-        function startPlay() {
-          if (settled) return;
-          playAttempts += 1;
-          var attempt = playAttempts;
-          var p;
-          try {
-            p = audioEl.play();
-          } catch (ePlay) {
-            playFailed = attempt < 2;
-            if (!playFailed) fin();
-            return;
-          }
-          if (p !== undefined && typeof p.then === 'function') {
-            p.then(function () {
-              playFailed = false;
-              clearCanplayTimer();
-              armStall();
-            }).catch(function () {
-              if (settled || attempt >= 2) {
-                if (!settled) fin();
-                return;
-              }
-              var ready = 0;
-              try {
-                ready = audioEl.readyState;
-              } catch (eReady) {
-                /* ignore */
-              }
-              if (ready >= 2) {
-                startPlay();
-                return;
-              }
-              playFailed = true;
-            });
-          } else {
-            clearCanplayTimer();
-            armStall();
-          }
-        }
-        /** TCL/Android TV sering menolak play() sebelum buffer MP3 siap. */
+        /** TV lama sering tidak fire canplaythrough — anggap siap begitu play/canplay. */
         function onReady() {
           clearCanplayTimer();
-          if (!playFailed || settled) return;
-          playFailed = false;
-          startPlay();
         }
         try {
           audioEl.addEventListener('ended', onEnded, { once: true });
@@ -387,7 +343,18 @@
           /* TV lama: abaikan */
         }
 
-        startPlay();
+        var p = audioEl.play();
+        if (p !== undefined && typeof p.then === 'function') {
+          p.then(function () {
+            clearCanplayTimer();
+            armStall();
+          }).catch(function () {
+            fin();
+          });
+        } else {
+          clearCanplayTimer();
+          armStall();
+        }
       });
     }
 

@@ -172,7 +172,7 @@
   Browser/TV memblokir audio otomatis sampai ada interaksi. Sentuh layar atau tekan OK pada kotak ini <strong>sekali</strong> untuk mengaktifkan chime dan pengumuman suara (MP3 dari server).
   </div>
 
-<script src="{{ asset('js/monitor-tv-antrian-audio.js') }}?v=22"></script>
+<script src="{{ asset('js/monitor-tv-antrian-audio.js') }}?v=23"></script>
   <script>
     let rawInProcessExpress = @json($inProcessExpressData ?? []);
     let rawInProcessStandard = @json($inProcessStandardData ?? []);
