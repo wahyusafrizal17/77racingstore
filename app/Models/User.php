@@ -120,6 +120,13 @@ class User extends Authenticatable
             && in_array($role, self::modifikasiOriHrAdminRoles(), true);
     }
 
+    public static function grantsAdminPanelAccess(?string $section, ?string $role): bool
+    {
+        return ($section === 'admin' && $role === 'SuperAdmin')
+            || self::isModifikasiOriHrAdminRole($section, $role)
+            || ($section === 'speedshop' && $role === 'Manager');
+    }
+
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class);
@@ -964,15 +971,7 @@ class User extends Authenticatable
     /** Akses panel /admin (cabang & master pengguna): SuperAdmin, Head/Staf HR, Manager Speedshop outlet. */
     public function canAccessAdminPanel(): bool
     {
-        if ($this->section === 'admin' && $this->role === 'SuperAdmin') {
-            return true;
-        }
-
-        if ($this->isModifikasiOriHrAdmin()) {
-            return true;
-        }
-
-        return $this->isSpeedshopOutletManager();
+        return self::grantsAdminPanelAccess($this->section, $this->role);
     }
 
     /** @deprecated Gunakan canAccessAdminPanel() atau isHeadHrAdmin(). */
@@ -991,6 +990,9 @@ class User extends Authenticatable
                 })->orWhere(function ($q) {
                     $q->where('section', 'admin')
                         ->where('role', 'SuperAdmin');
+                })->orWhere(function ($q) {
+                    $q->where('section', 'speedshop')
+                        ->where('role', 'Manager');
                 });
             });
     }

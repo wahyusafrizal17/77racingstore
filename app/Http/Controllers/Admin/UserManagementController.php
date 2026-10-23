@@ -320,7 +320,7 @@ class UserManagementController extends Controller
                 ->where('id', '!=', $user->id)
                 ->exists();
             if (! $other) {
-                $msg = 'Harus ada minimal satu akun HR (77racing) untuk panel admin.';
+                $msg = 'Harus ada minimal satu akun yang bisa membuka panel admin.';
                 if ($request->wantsJson()) {
                     return response()->json(['message' => $msg], 422);
                 }

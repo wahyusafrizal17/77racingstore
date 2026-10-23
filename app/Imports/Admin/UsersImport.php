@@ -163,7 +163,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     ->exists();
                 if (! $other) {
                     $this->deleteSkipped++;
-                    $this->pushDeleteError('Tidak menghapus '.$user->email.' (harus ada minimal satu akun HR).');
+                    $this->pushDeleteError('Tidak menghapus '.$user->email.' (harus ada minimal satu akun yang bisa membuka panel admin).');
 
                     continue;
                 }
@@ -281,18 +281,12 @@ class UsersImport implements ToCollection, WithHeadingRow
             return ['_error' => 'Password minimal 8 karakter.'];
         }
 
-        if ($existing && $existing->canAccessAdminPanel()) {
-            $stillAdminPanelUser = User::isModifikasiOriHrAdminRole(
-                $payload['section'],
-                $payload['role'],
-            );
-            if (! $stillAdminPanelUser) {
-                $other = User::adminPanelUserQuery()
-                    ->where('id', '!=', $existing->id)
-                    ->exists();
-                if (! $other) {
-                    return ['_error' => 'Harus ada minimal satu akun HR (77racing).'];
-                }
+        if ($existing && $existing->canAccessAdminPanel() && ! User::grantsAdminPanelAccess($payload['section'], $payload['role'])) {
+            $other = User::adminPanelUserQuery()
+                ->where('id', '!=', $existing->id)
+                ->exists();
+            if (! $other) {
+                return ['_error' => 'Harus ada minimal satu akun yang bisa membuka panel admin.'];
             }
         }
 
