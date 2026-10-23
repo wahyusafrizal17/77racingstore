@@ -73,7 +73,7 @@ class ProdukSpeedshopPriceImport implements ToCollection, WithHeadingRow
     public function collection(Collection $rows): void
     {
         $warehouseId = Auth::user()?->activeWarehouseId();
-        if ($warehouseId === null) {
+        if ($warehouseId === null && ! $this->isWarehouseSharedImport()) {
             return;
         }
 
@@ -288,21 +288,26 @@ class ProdukSpeedshopPriceImport implements ToCollection, WithHeadingRow
         return $activeSpeedshopId ? [(int) $activeSpeedshopId] : [];
     }
 
-    private function findProductForImport(int $warehouseId, string $kodeUpper, ?int $speedshopId): ?Product
+    private function findProductForImport(?int $warehouseId, string $kodeUpper, ?int $speedshopId): ?Product
     {
         $scopeId = $this->isWarehouseSharedImport() ? 0 : (int) $speedshopId;
         if (! $this->isWarehouseSharedImport() && $scopeId <= 0) {
             return null;
         }
 
-        // Unik DB = warehouse + scope + kode (tanpa jenis, termasuk soft-delete).
-        return Product::withTrashed()
-            ->where('warehouse_id', $warehouseId)
+        $query = Product::withTrashed()
             ->where('speedshop_scope_id', $scopeId)
             ->where(function ($q) use ($kodeUpper) {
                 $q->where('kode_produk', $kodeUpper)
                     ->orWhereRaw('UPPER(TRIM(kode_produk)) = ?', [$kodeUpper]);
-            })
+            });
+        if ($warehouseId) {
+            $query->where('warehouse_id', $warehouseId);
+        } else {
+            $query->whereNull('warehouse_id');
+        }
+
+        return $query
             ->orderByRaw('CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END')
             ->first();
     }
@@ -462,10 +467,41 @@ class ProdukSpeedshopPriceImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            return $v;
+            return $this->parseMoney($v);
         }
 
         return 0;
+    }
+
+    private function parseMoney(mixed $value): float
+    {
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+
+        $s = preg_replace('/[^\d,.-]/', '', trim((string) $value)) ?? '';
+        if ($s === '' || $s === '-' || $s === '.' || $s === ',') {
+            return 0.0;
+        }
+
+        $lastComma = strrpos($s, ',');
+        $lastDot = strrpos($s, '.');
+        if ($lastComma !== false && $lastDot !== false) {
+            if ($lastComma > $lastDot) {
+                $s = str_replace('.', '', $s);
+                $s = str_replace(',', '.', $s);
+            } else {
+                $s = str_replace(',', '', $s);
+            }
+        } elseif ($lastDot !== false && preg_match('/\.\d{3}$/', $s)) {
+            $s = str_replace('.', '', $s);
+        } elseif ($lastComma !== false && preg_match('/,\d{3}$/', $s)) {
+            $s = str_replace(',', '', $s);
+        } else {
+            $s = str_replace(',', '.', $s);
+        }
+
+        return (float) $s;
     }
 
     private function intCell(Collection $row, array $keys): int
