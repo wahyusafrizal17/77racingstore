@@ -1,0 +1,737 @@
+.piutang-reseller-page {
+  --ink: #14161a;
+  --ink-soft: #5b6168;
+  --line: #e7e9ec;
+  --line-soft: #f0f1f3;
+  --bg: #f7f8fa;
+  --panel: #ffffff;
+  --red: #8CFA01;
+  --red-ink: #3d6b00;
+  --red-soft: #f3fde0;
+  --green: #16a34a;
+  --green-soft: #eafaf0;
+  --amber: #b45309;
+  --amber-soft: #fef6e7;
+  --blue: #2563eb;
+  --blue-soft: #eaf1ff;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(20, 22, 26, 0.04), 0 1px 12px rgba(20, 22, 26, 0.03);
+  --font: 'Inter', sans-serif;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+main:has(.piutang-reseller-page),
+main:has(.hutang-supplier-page) {
+  padding: 1rem 1.25rem 1.75rem;
+}
+
+.piutang-reseller-page .mono {
+  font-family: var(--font);
+}
+
+.piutang-reseller-page input,
+.piutang-reseller-page select,
+.piutang-reseller-page textarea,
+.piutang-reseller-page button {
+  font-family: var(--font);
+}
+
+.piutang-reseller-page .pr-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 0 0;
+  margin-bottom: 8px;
+}
+
+.piutang-reseller-page .pr-topbar-end {
+  justify-content: flex-end;
+}
+
+.piutang-reseller-page .pr-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.piutang-reseller-page .pr-crumbs a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.piutang-reseller-page .pr-crumbs a:hover {
+  color: var(--ink);
+}
+
+.piutang-reseller-page .pr-crumbs b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.piutang-reseller-page .pr-crumbs svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+}
+
+.piutang-reseller-page .pr-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.piutang-reseller-page .pr-back:hover {
+  color: var(--ink);
+  border-color: #d6d9dd;
+  background: var(--bg);
+}
+
+.piutang-reseller-page .panel-card.panel-card-flush > .section-hd {
+  padding: 20px 22px 0;
+  margin-bottom: 0;
+}
+
+.piutang-reseller-page .pr-identity .summary-row {
+  margin-bottom: 0;
+}
+
+.piutang-reseller-page .pr-layout,
+.piutang-reseller-page .pr-left-col,
+.piutang-reseller-page .pr-right-col {
+  display: contents;
+}
+
+.piutang-reseller-page .pr-empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.piutang-reseller-page .pr-t-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.piutang-reseller-page .pr-t-row:last-child {
+  margin-bottom: 0;
+}
+
+.piutang-reseller-page .pr-t-row:hover {
+  background: #f4f5f7;
+}
+
+.piutang-reseller-page .pr-t-row.is-selected {
+  background: rgba(140, 250, 1, 0.06);
+  border-color: rgba(140, 250, 1, 0.18);
+}
+
+.piutang-reseller-page .pr-t-dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.piutang-reseller-page .pr-t-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.piutang-reseller-page .pr-t-dot.partial {
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  color: #b45309;
+}
+
+.piutang-reseller-page .pr-t-dot.pending {
+  background: #f4f5f7;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  color: #8a8f98;
+}
+
+.piutang-reseller-page .pr-t-dot.selected {
+  background: #8CFA01;
+  border: 2px solid #e8192c;
+  color: #142000;
+}
+
+.piutang-reseller-page .pr-t-dot svg {
+  width: 12px;
+  height: 12px;
+}
+
+.piutang-reseller-page .pr-t-line {
+  width: 2px;
+  flex: 1;
+  background: rgba(0, 0, 0, 0.08);
+  margin-top: 4px;
+  min-height: 18px;
+}
+
+.piutang-reseller-page .pr-t-row:last-child .pr-t-dot-col .pr-t-line {
+  display: none;
+}
+
+.piutang-reseller-page .pr-t-body {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.piutang-reseller-page .pr-t-info b {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0d0d0d;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.piutang-reseller-page .pr-t-info .date {
+  font-size: 12px;
+  color: #8a8f98;
+}
+
+.piutang-reseller-page .pr-t-amounts {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.piutang-reseller-page .pr-t-amounts .total {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0d0d0d;
+}
+
+.piutang-reseller-page .pr-t-amounts .sisa {
+  font-size: 12px;
+  color: #3d6b00;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.piutang-reseller-page .pr-t-status {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.piutang-reseller-page .pr-t-status.cicilan {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.piutang-reseller-page .pr-t-status.dipilih {
+  background: rgba(140, 250, 1, 0.1);
+  color: #3d6b00;
+}
+
+.piutang-reseller-page .pr-t-status.telat,
+.hutang-supplier-page .pr-t-status.telat {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.piutang-reseller-page .pr-history-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.piutang-reseller-page .pr-history-item:last-child {
+  border-bottom: none;
+}
+
+.piutang-reseller-page .pr-history-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: #ecfdf3;
+  color: #12b76a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.piutang-reseller-page .pr-history-icon.blue {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.piutang-reseller-page .pr-history-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.piutang-reseller-page .pr-history-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.piutang-reseller-page .pr-history-text b {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0d0d0d;
+  display: block;
+}
+
+.piutang-reseller-page .pr-history-text span {
+  font-size: 12px;
+  color: #8a8f98;
+}
+
+.piutang-reseller-page .pr-history-amount {
+  font-size: 13px;
+  font-weight: 700;
+  color: #12b76a;
+  flex-shrink: 0;
+}
+
+.piutang-reseller-page .pr-sticky {
+  position: sticky;
+  top: 24px;
+}
+
+@media (max-width: 1080px) {
+  .piutang-reseller-page .pr-sticky {
+    position: static;
+  }
+}
+
+.piutang-reseller-page .pr-form-group {
+  margin-bottom: 18px;
+}
+
+.piutang-reseller-page .pr-form-group label {
+  display: block;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.piutang-reseller-page .pr-period-display {
+  font-size: 13px;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.piutang-reseller-page .pr-period-display b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.piutang-reseller-page .pr-period-display .sisa-tag {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--red-ink);
+  background: var(--red-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.piutang-reseller-page .pr-mode-toggle {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 18px;
+}
+
+.piutang-reseller-page .pr-mode-toggle button {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.piutang-reseller-page .pr-mode-toggle button.active {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.piutang-reseller-page .pr-amount-input {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: border-color 0.15s;
+  background: #fff;
+}
+
+.piutang-reseller-page .pr-amount-input:focus-within {
+  border-color: var(--red-ink);
+  box-shadow: 0 0 0 3px var(--red-soft);
+}
+
+.piutang-reseller-page .pr-amount-input .prefix {
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-right: 8px;
+}
+
+.piutang-reseller-page .pr-amount-input input {
+  border: none;
+  outline: none;
+  font-size: 18px;
+  font-weight: 600;
+  width: 100%;
+  font-family: var(--font);
+  color: var(--ink);
+  background: transparent;
+}
+
+.piutang-reseller-page .pr-quick-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.piutang-reseller-page .pr-quick-btn {
+  flex: 1;
+  padding: 9px;
+  text-align: center;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.piutang-reseller-page .pr-quick-btn:hover {
+  border-color: #d6d9dd;
+  color: var(--ink);
+}
+
+.piutang-reseller-page .pr-quick-btn.active {
+  border-color: var(--red-ink);
+  background: var(--red-soft);
+  color: var(--red-ink);
+}
+
+.piutang-reseller-page .pr-balance-note {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+}
+
+.piutang-reseller-page .pr-balance-note b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.piutang-reseller-page .pr-select-input,
+.piutang-reseller-page .pr-text-input {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.piutang-reseller-page .pr-select-input:focus,
+.piutang-reseller-page .pr-text-input:focus {
+  outline: none;
+  border-color: var(--red-ink);
+  box-shadow: 0 0 0 3px var(--red-soft);
+}
+
+.piutang-reseller-page .pr-text-input {
+  resize: vertical;
+  min-height: 64px;
+}
+
+.piutang-reseller-page .pr-upload-zone {
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  padding: 22px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--bg);
+  display: block;
+}
+
+.piutang-reseller-page .pr-upload-zone:hover {
+  border-color: var(--red-ink);
+  background: var(--red-soft);
+}
+
+.piutang-reseller-page .pr-upload-zone svg {
+  width: 22px;
+  height: 22px;
+  color: var(--ink-soft);
+  margin: 0 auto 8px;
+  display: block;
+}
+
+.piutang-reseller-page .pr-upload-zone .u-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.piutang-reseller-page .pr-upload-zone .u-sub {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+
+.piutang-reseller-page .pr-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--line-soft);
+  margin-top: 6px;
+}
+
+.piutang-reseller-page .pr-total-row .label {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.piutang-reseller-page .pr-total-row .amount {
+  font-family: var(--font);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.piutang-reseller-page .pr-btn-submit {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--red);
+  color: #142000;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: var(--font);
+}
+
+.piutang-reseller-page .pr-btn-submit:hover:not(:disabled) {
+  background: #c81a1a;
+}
+
+.piutang-reseller-page .pr-btn-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.piutang-reseller-page .pr-btn-submit svg {
+  width: 16px;
+  height: 16px;
+}
+
+.piutang-reseller-page .pr-empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.piutang-reseller-page .pr-field-error {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--red-ink);
+}
+
+.piutang-reseller-page .ss-dash-content {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.piutang-reseller-page .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.piutang-reseller-page .pr-t-row.is-child {
+  margin-left: 12px;
+}
+
+.piutang-reseller-page {
+  --pr-week-list-row-h: 72px;
+  --pr-week-list-gap: 8px;
+  --pr-week-list-visible-rows: 5;
+}
+
+.piutang-reseller-page .pr-list-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 22px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+@media (min-width: 640px) {
+  .piutang-reseller-page .pr-list-filter {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}
+
+.piutang-reseller-page .pr-list-filter .pr-filter-search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.piutang-reseller-page .pr-list-filter .pr-filter-week,
+.piutang-reseller-page .pr-list-filter .pr-filter-status {
+  flex: 0 1 180px;
+  min-width: 150px;
+}
+
+.piutang-reseller-page .pr-list-filter-meta {
+  width: 100%;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.piutang-reseller-page .pr-filter-reset {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: none;
+  border: none;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.piutang-reseller-page .pr-filter-reset:hover {
+  color: var(--ink);
+}
+
+.piutang-reseller-page .pr-week-tx-scroll {
+  max-height: calc(
+    var(--pr-week-list-visible-rows) * (var(--pr-week-list-row-h) + var(--pr-week-list-gap)) -
+      var(--pr-week-list-gap)
+  );
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  margin-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.piutang-reseller-page .pr-week-tx-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.piutang-reseller-page .pr-week-tx-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.piutang-reseller-page .pr-week-empty-filter {
+  margin: 0 0 8px 12px;
+  padding: 14px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.piutang-reseller-page .pr-list-empty-filter {
+  padding: 28px 22px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
