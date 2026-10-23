@@ -165,14 +165,14 @@
 
 </div>
 
-<audio id="antrian-voice-audio" preload="auto" playsinline webkit-playsinline style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;overflow:hidden" aria-hidden="true"></audio>
+<audio id="antrian-voice-audio" preload="auto" playsinline webkit-playsinline style="position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none" aria-hidden="true"></audio>
 
 <div id="antrian-audio-hint" role="button" tabindex="0" aria-live="polite" aria-label="Sentuh untuk mengaktifkan suara monitor antrian" style="display:none">
   <strong>Suara panggilan</strong>
   Browser/TV memblokir audio otomatis sampai ada interaksi. Sentuh layar atau tekan OK pada kotak ini <strong>sekali</strong> untuk mengaktifkan chime dan pengumuman suara (MP3 dari server).
   </div>
 
-<script src="{{ asset('js/monitor-tv-antrian-audio.js') }}?v=18"></script>
+<script src="{{ asset('js/monitor-tv-antrian-audio.js') }}?v=19"></script>
   <script>
     let rawInProcessExpress = @json($inProcessExpressData ?? []);
     let rawInProcessStandard = @json($inProcessStandardData ?? []);
@@ -710,6 +710,16 @@
       return texts;
     }
 
+    function clipUrlForThisScreen(url) {
+      try {
+        const u = new URL(String(url), window.location.href);
+        if (u.pathname.includes('/elevenlabs-tts/')) {
+          return `${window.location.origin}${u.pathname}${u.search}`;
+        }
+      } catch (e) { /* ignore */ }
+      return url;
+    }
+
     async function fetchAntrianTtsUrls(texts) {
       const res = await fetch(ANTRIAN_TTS_URL, {
         method: 'POST',
@@ -730,7 +740,7 @@
         } catch (e2) { /* ignore */ }
         return [];
       }
-      return data.clips.map((c) => c && c.url).filter(Boolean);
+      return data.clips.map((c) => c && c.url).filter(Boolean).map(clipUrlForThisScreen);
     }
 
     /**
@@ -793,7 +803,9 @@
         return;
       }
       const texts = Array.isArray(panggilan?.texts) ? panggilan.texts : [];
-      let speechUrls = Array.isArray(panggilan?.clip_urls) ? panggilan.clip_urls.filter(Boolean) : [];
+      let speechUrls = Array.isArray(panggilan?.clip_urls)
+        ? panggilan.clip_urls.filter(Boolean).map(clipUrlForThisScreen)
+        : [];
 
       if (!speechUrls.length && texts.length && antrianElevenlabsConfigured) {
         speechUrls = await fetchAntrianTtsUrls(texts);

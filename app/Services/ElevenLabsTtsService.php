@@ -14,7 +14,8 @@ final class ElevenLabsTtsService
 {
     private const MODEL_ID = 'eleven_multilingual_v2';
 
-    private const OUTPUT_FORMAT = 'mp3_44100_64';
+    /** 128 kbps: browser TCL/Android TV menolak mp3 64 kbps, laptop tetap bisa. */
+    private const OUTPUT_FORMAT = 'mp3_44100_128';
 
     private const MAX_TEXT_LEN = 500;
 
@@ -74,7 +75,7 @@ final class ElevenLabsTtsService
                 continue;
             }
 
-            $hash = hash('sha256', $voiceId.'|'.self::MODEL_ID.'|'.$norm.'|s='.$speedTag);
+            $hash = hash('sha256', $voiceId.'|'.self::MODEL_ID.'|'.self::OUTPUT_FORMAT.'|'.$norm.'|s='.$speedTag);
             $filename = $hash.'.mp3';
             $fullPath = $this->clipFilesystemPath($filename);
 
@@ -223,7 +224,9 @@ final class ElevenLabsTtsService
 
     private function publicUrl(string $filename): string
     {
-        return asset(self::PUBLIC_SUBDIR.'/'.ltrim($filename, '/'));
+        // Root-relative: monitor di TV sering dibuka lewat IP LAN, sementara
+        // tombol Panggil diklik dari laptop (localhost). asset() mengunci host pemanggil.
+        return '/'.self::PUBLIC_SUBDIR.'/'.ltrim($filename, '/');
     }
 
     private function describeHttpFailure(Response $response): string
