@@ -302,7 +302,7 @@
                     <div x-show="form.section === 'speedshop' && speedshopRolesWithSingleCabang.includes(form.role) && !speedshopRolesWithMultiCabang.includes(form.role)" x-cloak>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700">Cabang speedshop <span class="text-red-500" x-show="form.role !== 'Manager'">*</span></label>
                         <p class="mb-1.5 text-xs text-gray-500" x-show="form.role === 'Manager'" x-cloak>Manager cabang: pilih satu outlet. Kosongkan untuk manager lintas cabang (semua outlet).</p>
-                        <p class="mb-1.5 text-xs text-gray-500" x-show="form.role !== 'Manager'" x-cloak>Mekanik, FLP, dan Staf terikat ke satu outlet.</p>
+                        <p class="mb-1.5 text-xs text-gray-500" x-show="form.role !== 'Manager'" x-cloak>Mekanik dan FLP terikat ke satu outlet.</p>
                         <select x-model="form.speedshop_id" class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/40" :class="errors.speedshop_id && 'border-red-400'">
                             <option value="">— Pilih cabang —</option>
                             <?php $__currentLoopData = $speedshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>

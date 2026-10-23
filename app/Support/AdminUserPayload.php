@@ -26,11 +26,9 @@ class AdminUserPayload
     {
         return [
             'Manager',
-            User::ROLE_SPEEDSHOP_HEAD_AREA,
             'Accounting',
             User::ROLE_SPEEDSHOP_MEKANIK,
             User::ROLE_SPEEDSHOP_FLP,
-            'Staf',
         ];
     }
 
@@ -38,20 +36,7 @@ class AdminUserPayload
     public static function modifikasiOriRoles(): array
     {
         return [
-            'Manager',
-            User::ROLE_MODIFIKASI_HEAD_PRODUKSI,
-            User::ROLE_MODIFIKASI_STAF_PRODUKSI,
-            User::ROLE_MODIFIKASI_STAF_INVENTORI,
-            User::ROLE_MODIFIKASI_HEAD_WAREHOUSE,
-            User::ROLE_MODIFIKASI_STAF_PROCESSING_WAREHOUSE,
-            User::ROLE_WAREHOUSE_STAF_WAREHOUSE,
-            User::ROLE_MODIFIKASI_HEAD_MARKETING,
             User::ROLE_MODIFIKASI_STAF_MARKETING,
-            User::ROLE_MODIFIKASI_HEAD_ACCOUNTING,
-            User::ROLE_MODIFIKASI_STAF_ACCOUNTING,
-            User::ROLE_MODIFIKASI_HEAD_HR,
-            User::ROLE_MODIFIKASI_STAF_HR,
-            User::ROLE_MODIFIKASI_HEAD_AUDIT,
         ];
     }
 
@@ -84,7 +69,6 @@ class AdminUserPayload
             'Accounting',
             User::ROLE_SPEEDSHOP_MEKANIK,
             User::ROLE_SPEEDSHOP_FLP,
-            'Staf',
         ];
     }
 
@@ -99,7 +83,6 @@ class AdminUserPayload
     {
         return [
             'Accounting',
-            User::ROLE_SPEEDSHOP_HEAD_AREA,
         ];
     }
 
@@ -144,7 +127,6 @@ class AdminUserPayload
                 [User::ROLE_OWNER],
                 self::speedshopRoles(),
                 self::modifikasiOriRoles(),
-                self::legacyFilterRoles(),
             )));
         }
 
@@ -162,18 +144,6 @@ class AdminUserPayload
         };
 
         return array_values(array_unique($roles));
-    }
-
-    /** @return list<string> */
-    private static function legacyModifikasiOriFilterRoles(): array
-    {
-        return [
-            'Staf',
-            'Accounting',
-            User::ROLE_WAREHOUSE_STAF_PACKING,
-            'Staf Inventori',
-            User::ROLE_WAREHOUSE_STAFF_ACCOUNTING_RESELLER,
-        ];
     }
 
     /** Terapkan filter role 77racing (termasuk pemetaan data legacy produksi/warehouse). */
@@ -221,12 +191,6 @@ class AdminUserPayload
         }
 
         $query->where('role', $role);
-    }
-
-    /** @return list<string> */
-    private static function legacyFilterRoles(): array
-    {
-        return array_merge(['Outlet'], self::legacyModifikasiOriFilterRoles());
     }
 
     public static function sectionLabel(?string $section): string
