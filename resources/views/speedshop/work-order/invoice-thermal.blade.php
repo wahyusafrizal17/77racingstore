@@ -16,20 +16,20 @@
         }
         .paper {
             /* Beberapa printer thermal punya margin kiri "non-printable". */
-            width: 72mm;
+            width: 52mm;
             margin: 0 auto;
-            padding: 2mm 2.5mm 4mm 4mm; /* extra left padding */
+            padding: 1.5mm 2mm 3mm 3mm; /* extra left padding */
         }
         @media print {
-            @page { size: 80mm auto; margin: 0; }
+            @page { size: 58mm auto; margin: 0; }
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .paper { width: 72mm; padding: 2mm 2.5mm 4mm 4mm; margin: 0; }
+            .paper { width: 52mm; padding: 1.5mm 2mm 3mm 3mm; margin: 0; }
         }
         .muted { color: #444; font-size: 10px; }
         .center { text-align: center; }
         .invoice-logo {
             display: block;
-            max-width: 52mm;
+            max-width: 42mm;
             width: 100%;
             height: auto;
             margin: 0 auto 8px;

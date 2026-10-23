@@ -2004,7 +2004,7 @@ class WorkOrderController extends Controller
     }
 
     /**
-     * Cetak struk thermal ±80mm (buka tab lalu Print / pilih kertas 80mm).
+     * Cetak struk thermal 58mm (buka tab lalu Print / pilih kertas 58mm).
      */
     public function invoiceThermal(ServiceOrder $service_order)
     {
