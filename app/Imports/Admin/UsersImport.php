@@ -2,6 +2,7 @@
 
 namespace App\Imports\Admin;
 
+use App\Models\MekanikLevel;
 use App\Models\User;
 use App\Services\MekanikUserSyncService;
 use App\Support\AdminUserPayload;
@@ -379,7 +380,10 @@ class UsersImport implements ToCollection, WithHeadingRow
         if ($levelName !== '') {
             $mekanikLevelId = $this->resolveId($levelName, $this->mekanikLevelIdsByName);
             if ($mekanikLevelId === null) {
-                return ['_error' => 'Level Mekanik tidak ditemukan: '.$levelName];
+                $existingLevel = MekanikLevel::query()
+                    ->whereRaw('LOWER(nama) = ?', [mb_strtolower($levelName)])
+                    ->first();
+                $mekanikLevelId = (int) ($existingLevel ?? MekanikLevel::query()->create(['nama' => $levelName]))->id;
             }
         }
 
