@@ -260,48 +260,14 @@
         }
         function armStall() {
           if (stallTimer) global.clearTimeout(stallTimer);
-          var mark = 0;
-          var stuckFor = 0;
-          try {
-            mark = audioEl.currentTime || 0;
-          } catch (eMark) {
-            mark = 0;
-          }
-          var step = 350;
-          stallTimer = global.setTimeout(function tick() {
-            if (settled) return;
-            var now = mark;
-            var paused = false;
-            var dur = NaN;
+          stallTimer = global.setTimeout(function () {
             try {
-              now = audioEl.currentTime || 0;
-              paused = !!audioEl.paused;
-              dur = audioEl.duration;
-            } catch (eNow) {
+              audioEl.pause();
+            } catch (e) {
               /* ignore */
             }
-            if (isFinite(dur) && dur > 0 && now + 0.3 >= dur) {
-              fin();
-              return;
-            }
-            if (!paused && now > mark + 0.12) {
-              mark = now;
-              stuckFor = 0;
-              stallTimer = global.setTimeout(tick, step);
-              return;
-            }
-            stuckFor += step;
-            if (stuckFor >= stallSkipMs) {
-              try {
-                audioEl.pause();
-              } catch (ePause) {
-                /* ignore */
-              }
-              fin();
-              return;
-            }
-            stallTimer = global.setTimeout(tick, step);
-          }, step);
+            fin();
+          }, stallSkipMs);
         }
         if (!url) {
           fin();
@@ -314,17 +280,6 @@
           }
         }
         function onEnded() {
-          var dur = NaN;
-          var t = 0;
-          try {
-            dur = audioEl.duration;
-            t = audioEl.currentTime || 0;
-          } catch (eEnd) {
-            /* ignore */
-          }
-          if (!isFinite(dur) || dur <= 0 || t + 0.4 < dur) {
-            return;
-          }
           fin();
         }
         function onErr() {
@@ -382,7 +337,7 @@
           startPlay();
         }
         try {
-          audioEl.addEventListener('ended', onEnded);
+          audioEl.addEventListener('ended', onEnded, { once: true });
           audioEl.addEventListener('error', onErr, { once: true });
           audioEl.addEventListener('stalled', onStalled, { once: true });
           audioEl.addEventListener('canplaythrough', onReady, { once: true });
