@@ -261,33 +261,47 @@
         function armStall() {
           if (stallTimer) global.clearTimeout(stallTimer);
           var mark = 0;
+          var stuckFor = 0;
           try {
             mark = audioEl.currentTime || 0;
           } catch (eMark) {
             mark = 0;
           }
+          var step = 350;
           stallTimer = global.setTimeout(function tick() {
             if (settled) return;
             var now = mark;
             var paused = false;
+            var dur = NaN;
             try {
               now = audioEl.currentTime || 0;
               paused = !!audioEl.paused;
+              dur = audioEl.duration;
             } catch (eNow) {
               /* ignore */
             }
-            if (!paused && now > mark + 0.2) {
-              mark = now;
-              stallTimer = global.setTimeout(tick, stallSkipMs);
+            if (isFinite(dur) && dur > 0 && now + 0.3 >= dur) {
+              fin();
               return;
             }
-            try {
-              audioEl.pause();
-            } catch (ePause) {
-              /* ignore */
+            if (!paused && now > mark + 0.12) {
+              mark = now;
+              stuckFor = 0;
+              stallTimer = global.setTimeout(tick, step);
+              return;
             }
-            fin();
-          }, stallSkipMs);
+            stuckFor += step;
+            if (stuckFor >= stallSkipMs) {
+              try {
+                audioEl.pause();
+              } catch (ePause) {
+                /* ignore */
+              }
+              fin();
+              return;
+            }
+            stallTimer = global.setTimeout(tick, step);
+          }, step);
         }
         if (!url) {
           fin();
