@@ -260,10 +260,30 @@
         }
         function armStall() {
           if (stallTimer) global.clearTimeout(stallTimer);
-          stallTimer = global.setTimeout(function () {
+          var mark = 0;
+          try {
+            mark = audioEl.currentTime || 0;
+          } catch (eMark) {
+            mark = 0;
+          }
+          stallTimer = global.setTimeout(function tick() {
+            if (settled) return;
+            var now = mark;
+            var paused = false;
+            try {
+              now = audioEl.currentTime || 0;
+              paused = !!audioEl.paused;
+            } catch (eNow) {
+              /* ignore */
+            }
+            if (!paused && now > mark + 0.2) {
+              mark = now;
+              stallTimer = global.setTimeout(tick, stallSkipMs);
+              return;
+            }
             try {
               audioEl.pause();
-            } catch (e) {
+            } catch (ePause) {
               /* ignore */
             }
             fin();
@@ -280,6 +300,17 @@
           }
         }
         function onEnded() {
+          var dur = NaN;
+          var t = 0;
+          try {
+            dur = audioEl.duration;
+            t = audioEl.currentTime || 0;
+          } catch (eEnd) {
+            /* ignore */
+          }
+          if (!isFinite(dur) || dur <= 0 || t + 0.4 < dur) {
+            return;
+          }
           fin();
         }
         function onErr() {
@@ -337,7 +368,7 @@
           startPlay();
         }
         try {
-          audioEl.addEventListener('ended', onEnded, { once: true });
+          audioEl.addEventListener('ended', onEnded);
           audioEl.addEventListener('error', onErr, { once: true });
           audioEl.addEventListener('stalled', onStalled, { once: true });
           audioEl.addEventListener('canplaythrough', onReady, { once: true });
