@@ -37,16 +37,12 @@ return [
 
     /*
     | WACloud — kirim invoice PDF ke WhatsApp (https://app.wacloud.id/api/v1/messages).
-    | WACLOUD_DEVICE_ID: dari dashboard WACLOUD (device/session terhubung).
+    | WACLOUD_DEVICE_ID_77RACINGSTORE: dari dashboard WACLOUD (device/session terhubung).
     | Jangan commit API key; pakai .env saja.
     */
     'wacloud' => [
         'api_key' => env('WACLOUD_API_KEY'),
-        'device_id' => env('WACLOUD_DEVICE_ID'),
-        'device_id_bandung' => env('WACLOUD_DEVICE_ID_BANDUNG'),
-        'device_id_bogor' => env('WACLOUD_DEVICE_ID_BOGOR'),
-        'device_id_depok' => env('WACLOUD_DEVICE_ID_DEPOK'),
-        'device_id_bekasi' => env('WACLOUD_DEVICE_ID_BEKASI'),
+        'device_id' => env('WACLOUD_DEVICE_ID_77RACINGSTORE'),
         'base_url' => env('WACLOUD_BASE_URL', 'https://app.wacloud.id/api/v1'),
     ],
 

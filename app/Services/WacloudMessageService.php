@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Speedshop;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -12,60 +11,15 @@ class WacloudMessageService
 {
     public function resolveDeviceId(): ?string
     {
-        $fallback = trim((string) config('services.wacloud.device_id'));
+        $id = trim((string) config('services.wacloud.device_id'));
 
-        $user = auth()->user();
-        $ssid = $user?->activeSpeedshopId();
-        if (! $ssid) {
-            return $fallback !== '' ? $fallback : null;
-        }
-
-        $sp = Speedshop::query()->find($ssid);
-        if (! $sp) {
-            return $fallback !== '' ? $fallback : null;
-        }
-
-        $nama = mb_strtolower((string) ($sp->nama ?? ''));
-        $outletCode = $sp->invoiceOutletCode();
-
-        $bandung = trim((string) config('services.wacloud.device_id_bandung'));
-        $bogor = trim((string) config('services.wacloud.device_id_bogor'));
-        $depok = trim((string) config('services.wacloud.device_id_depok'));
-        $bekasi = trim((string) config('services.wacloud.device_id_bekasi'));
-
-        if (($outletCode === 'KTP' || str_contains($nama, 'bandung')) && $bandung !== '') {
-            return $bandung;
-        }
-        if (($outletCode === 'CLK' || str_contains($nama, 'bogor')) && $bogor !== '') {
-            return $bogor;
-        }
-        if (($outletCode === 'CSK' || str_contains($nama, 'depok')) && $depok !== '') {
-            return $depok;
-        }
-        if (($outletCode === 'BKS' || str_contains($nama, 'bekasi')) && $bekasi !== '') {
-            return $bekasi;
-        }
-
-        return $fallback !== '' ? $fallback : null;
+        return $id !== '' ? $id : null;
     }
 
     /** Device ID untuk konteks non-speedshop. */
     public function resolveDeviceIdForGeneral(): ?string
     {
-        foreach ([
-            'device_id',
-            'device_id_bandung',
-            'device_id_bogor',
-            'device_id_depok',
-            'device_id_bekasi',
-        ] as $key) {
-            $id = trim((string) config('services.wacloud.'.$key, ''));
-            if ($id !== '') {
-                return $id;
-            }
-        }
-
-        return null;
+        return $this->resolveDeviceId();
     }
 
     public function isConfiguredForGeneral(): bool
