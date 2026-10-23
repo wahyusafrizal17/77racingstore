@@ -1,34 +1,54 @@
 <style>
+  :root {
+    --lime: #8cfa01;
+    --ink: #142000;
+    --bg: #050605;
+    --gold: #e4d3a8;
+    --silver: #e7e8e3;
+    --mute: #8e9488;
+    --line: rgba(255, 255, 255, 0.08);
+    --card: rgba(12, 14, 11, 0.72);
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    color: #fff;
+    color: var(--silver);
     font-family: 'Inter', sans-serif;
     height: 100vh;
     height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background-color: #0a0a0a;
-    background-image: url("{{ asset('images/monitor-antrian-content-bg.png') }}");
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(980px 420px at 0% -8%, rgba(140, 250, 1, 0.11), transparent 58%),
+      radial-gradient(720px 460px at 100% 112%, rgba(140, 250, 1, 0.05), transparent 52%);
     background-size: cover;
     background-position: center;
-    background-repeat: no-repeat;
   }
 
-  /* ===== HEADER ===== */
+  body > * { position: relative; z-index: 1; }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url("{{ asset('images/logo.png') }}") center 56% / 86vw auto no-repeat;
+    mix-blend-mode: screen;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 4;
+  }
+
   .header {
     flex-shrink: 0;
-    background-color: #0d0d0d;
-    background-image:
-      linear-gradient(135deg, rgba(13, 13, 13, 0.5) 0%, rgba(13, 13, 13, 0.25) 42%, rgba(13, 13, 13, 0.45) 100%),
-      url("{{ asset('images/monitor-antrian-header-bg.png') }}");
-    background-size: cover, cover;
-    background-position: center, center;
-    background-repeat: no-repeat, no-repeat;
-    border-bottom: 1px solid #333;
-    padding: 0 28px;
-    height: 80px;
+    background:
+      linear-gradient(90deg, rgba(140, 250, 1, 0.07), transparent 32%),
+      #000;
+    border-bottom: 1px solid var(--line);
+    padding: 0 32px;
+    height: 92px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -47,17 +67,16 @@
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #c0392b 20%, #c0392b 80%, transparent);
+    background: linear-gradient(90deg, transparent, var(--lime) 16%, var(--lime) 84%, transparent);
     z-index: 3;
   }
 
-  /* Red diagonal accent top-right */
   .header-red-accent {
     position: absolute;
     top: 0; right: 0;
-    width: 180px;
-    height: 80px;
-    background: linear-gradient(135deg, transparent 40%, rgba(192,57,43,0.5) 100%);
+    width: 240px;
+    height: 92px;
+    background: linear-gradient(125deg, transparent 46%, rgba(140, 250, 1, 0.14) 100%);
     pointer-events: none;
     z-index: 1;
   }
@@ -76,8 +95,8 @@
   }
 
   .logo-box img {
-    width: 44px;
-    height: 44px;
+    height: 58px;
+    width: auto;
     display: block;
     object-fit: contain;
   }
@@ -86,17 +105,18 @@
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 18px;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     color: #fff;
     line-height: 1;
   }
 
   .brand-sub {
     font-size: 11px;
-    color: #888;
-    letter-spacing: 0.1em;
+    color: var(--mute);
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 4px;
   }
 
   .header-center {
@@ -108,18 +128,18 @@
 
   .monitor-label {
     font-size: 11px;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.32em;
     text-transform: uppercase;
-    color: #c0392b;
+    color: var(--lime);
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
 
   .monitor-title {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 26px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #fff;
   }
@@ -132,9 +152,9 @@
 
   .clock-time {
     font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 36px;
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    font-size: 32px;
+    letter-spacing: 0.08em;
     color: #fff;
     line-height: 1;
   }
@@ -143,142 +163,139 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 4px;
+    margin-top: 5px;
     justify-content: flex-end;
   }
 
   .live-dot {
-    width: 8px; height: 8px;
-    background: #22c55e;
+    width: 7px; height: 7px;
+    background: var(--lime);
     border-radius: 50%;
-    animation: blink 1.5s infinite;
+    box-shadow: 0 0 10px rgba(140, 250, 1, 0.7);
+    animation: blink 1.6s infinite;
   }
 
   @keyframes blink {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+    50% { opacity: 0.35; }
   }
 
   .live-text {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.1em;
-    color: #22c55e;
+    letter-spacing: 0.22em;
+    color: var(--lime);
   }
 
   .clock-date {
     font-size: 12px;
-    color: #888;
+    color: var(--mute);
+    letter-spacing: 0.04em;
     text-align: right;
-    margin-top: 2px;
+    margin-top: 3px;
   }
 
-  /* ===== STATS ROW ===== */
   .stats-row {
     flex-shrink: 0;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    padding: 14px 20px;
+    gap: 14px;
+    padding: 16px 24px 14px;
     background: transparent;
   }
 
   .stat-card {
-    background: #161616;
-    border: 1px solid #2a2a2a;
-    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+    border: 1px solid var(--line);
+    border-radius: 16px;
     padding: 14px 18px;
     display: flex;
     align-items: center;
     gap: 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .stat-icon {
-    width: 46px; height: 46px;
-    border-radius: 50%;
+    width: 44px; height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 20px;
+    font-size: 18px;
   }
 
-  .stat-icon.green  { border: 2px solid #22c55e; color: #22c55e; background: rgba(34,197,94,0.08); }
-  .stat-icon.orange { border: 2px solid #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.08); }
-  .stat-icon.blue   { border: 2px solid #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.08); }
-  .stat-icon.purple { border: 2px solid #a855f7; color: #a855f7; background: rgba(168,85,247,0.08); }
+  .stat-icon.green  { border: 1px solid rgba(140, 250, 1, 0.55); color: var(--lime); background: rgba(140, 250, 1, 0.08); }
+  .stat-icon.orange { border: 1px solid rgba(228, 211, 168, 0.5); color: var(--gold); background: rgba(228, 211, 168, 0.08); }
+  .stat-icon.blue   { border: 1px solid rgba(255, 255, 255, 0.22); color: var(--silver); background: rgba(255, 255, 255, 0.04); }
+  .stat-icon.purple { border: 1px solid rgba(140, 250, 1, 0.28); color: #d7f7a4; background: rgba(140, 250, 1, 0.05); }
 
   .stat-num {
     font-family: 'Orbitron', 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 30px;
+    font-weight: 600;
+    font-size: 28px;
     line-height: 1;
+    letter-spacing: 0.04em;
     min-width: 1.5ch;
     flex-shrink: 0;
   }
 
-  .stat-num.green  { color: #22c55e; }
-  .stat-num.orange { color: #f59e0b; }
-  .stat-num.blue   { color: #3b82f6; }
-  .stat-num.purple { color: #a855f7; }
+  .stat-num.green  { color: var(--lime); }
+  .stat-num.orange { color: var(--gold); }
+  .stat-num.blue   { color: #fff; }
+  .stat-num.purple { color: #d7f7a4; }
 
-  .stat-info { }
   .stat-title {
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.06em;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #fff;
     margin-top: 2px;
   }
   .stat-sub {
     font-size: 11px;
-    color: #666;
-    margin-top: 2px;
+    color: var(--mute);
+    margin-top: 3px;
+    letter-spacing: 0.02em;
   }
 
-  /* ===== MAIN PANELS ===== */
   .panels {
     flex: 1;
     min-height: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    padding: 0 20px 10px;
+    gap: 16px;
+    padding: 0 24px 20px;
     background: transparent;
   }
 
   .panel {
-    border-radius: 14px;
-    border: 1px solid;
+    border-radius: 18px;
+    border: 1px solid var(--line);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    background: var(--card);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
-  .panel.left  { border-color: #22c55e; background: transparent; }
-  .panel.right { border-color: #f59e0b; background: transparent; }
-  .panel.blue  { border-color: #3b82f6; background: transparent; }
+  .panel.left  { border-color: rgba(140, 250, 1, 0.38); }
+  .panel.right { border-color: rgba(228, 211, 168, 0.34); }
+  .panel.blue  { border-color: rgba(255, 255, 255, 0.16); }
 
-  .panels.panels--1 {
-    grid-template-columns: 1fr;
-  }
-
-  .panels.panels--3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .panels.panels--1 { grid-template-columns: 1fr; }
+  .panels.panels--3 { grid-template-columns: repeat(3, 1fr); }
 
   .panel-header {
-    padding: 12px 18px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.28);
   }
-
-  .panel.left  .panel-header { background: transparent; }
-  .panel.right .panel-header { background: transparent; }
 
   .panel-title-row {
     display: flex;
@@ -287,25 +304,24 @@
   }
 
   .panel-dot {
-    width: 10px; height: 10px;
+    width: 8px; height: 8px;
     border-radius: 50%;
-    animation: blink 1.5s infinite;
+    animation: blink 1.6s infinite;
   }
-  .panel-dot.green  { background: #22c55e; }
-  .panel-dot.orange { background: #f59e0b; }
+  .panel-dot.green  { background: var(--lime); box-shadow: 0 0 10px rgba(140, 250, 1, 0.65); }
+  .panel-dot.orange { background: var(--gold); }
+  .panel-dot.blue   { background: var(--silver); }
 
   .panel-title {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 16px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
   }
-  .panel.left  .panel-title { color: #22c55e; }
-  .panel.right .panel-title { color: #f59e0b; }
-  .panel.blue  .panel-title { color: #60a5fa; }
-
-  .panel-dot.blue { background: #3b82f6; }
+  .panel.left  .panel-title { color: var(--lime); }
+  .panel.right .panel-title { color: var(--gold); }
+  .panel.blue  .panel-title { color: var(--silver); }
 
   .panel-count {
     font-family: 'Rajdhani', sans-serif;
@@ -313,12 +329,13 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     padding: 4px 14px;
-    border-radius: 20px;
+    border-radius: 999px;
     border: 1px solid;
+    background: transparent;
   }
-  .panel.left  .panel-count { color: #22c55e; border-color: #22c55e; background: transparent; }
-  .panel.right .panel-count { color: #f59e0b; border-color: #f59e0b; background: transparent; }
-  .panel.blue  .panel-count { color: #60a5fa; border-color: #3b82f6; background: transparent; }
+  .panel.left  .panel-count { color: var(--lime); border-color: rgba(140, 250, 1, 0.45); }
+  .panel.right .panel-count { color: var(--gold); border-color: rgba(228, 211, 168, 0.45); }
+  .panel.blue  .panel-count { color: var(--silver); border-color: rgba(255, 255, 255, 0.22); }
 
   .panel-body {
     flex: 1;
@@ -328,11 +345,10 @@
     flex-direction: column;
     gap: 10px;
     scrollbar-width: thin;
-    scrollbar-color: #333 transparent;
+    scrollbar-color: rgba(140, 250, 1, 0.35) transparent;
     min-height: 0;
   }
 
-  /* Menunggu: dua kartu terpisah (Express / Reguler) */
   .panel-body.panel-body--wait-split {
     overflow: hidden;
     gap: 12px;
@@ -343,55 +359,44 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(10, 10, 10, 0.45);
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.28);
     overflow: hidden;
   }
 
-  .wait-queue-bucket--express {
-    border-color: rgba(147, 51, 234, 0.55);
-  }
-
-  .wait-queue-bucket--reguler {
-    border-color: rgba(71, 85, 105, 0.7);
-  }
+  .wait-queue-bucket--express { border-color: rgba(176, 154, 214, 0.4); }
+  .wait-queue-bucket--reguler { border-color: rgba(255, 255, 255, 0.1); }
 
   .wait-queue-bucket-head {
     flex-shrink: 0;
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 12px;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 8px 12px;
+    padding: 9px 14px;
     display: flex;
     align-items: center;
     gap: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
+    border-bottom: 1px solid var(--line);
+    color: var(--mute);
   }
 
   .wait-queue-bucket--express .wait-queue-bucket-head {
-    color: #c4b5fd;
-    border-bottom-color: rgba(147, 51, 234, 0.28);
+    color: #ddd4ee;
+    border-bottom-color: rgba(176, 154, 214, 0.28);
   }
 
   .wait-queue-bucket-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  .wait-queue-bucket-dot.express {
-    background: #a855f7;
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.45);
-  }
-
-  .wait-queue-bucket-dot.reguler {
-    background: #64748b;
-  }
+  .wait-queue-bucket-dot.express { background: #c4b5e0; }
+  .wait-queue-bucket-dot.reguler { background: #8d9388; }
 
   .wait-queue-bucket-scroll {
     flex: 1;
@@ -402,10 +407,9 @@
     flex-direction: column;
     gap: 10px;
     scrollbar-width: thin;
-    scrollbar-color: #333 transparent;
+    scrollbar-color: rgba(140, 250, 1, 0.3) transparent;
   }
 
-  /* Jalur scroll kolom monitor (WebView TV / browser lawas): scroll + touch, hindari bleed scroll */
   #list-proses,
   #list-menunggu-express,
   #list-menunggu-reguler {
@@ -415,17 +419,30 @@
     overscroll-behavior: contain;
   }
 
-  /* Kolom proses: ruang bawah agar kartu terakhir tidak mepet border panel */
-  #list-proses.panel-body {
-    padding-bottom: 22px;
+  #list-proses:empty::after,
+  #list-menunggu-express:empty::after,
+  #list-menunggu-reguler:empty::after {
+    content: 'Belum ada antrian';
+    margin: auto;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
   }
 
-  /* ===== WORKING CARD (LEFT) ===== */
-  .work-card {
+  #list-proses.panel-body { padding-bottom: 22px; }
+
+  .work-card,
+  .wait-card {
     flex-shrink: 0;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
-    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .work-card {
+    border-radius: 14px;
     padding: 16px;
     position: relative;
     overflow: hidden;
@@ -439,38 +456,47 @@
 
   .queue-big {
     font-family: 'Orbitron', sans-serif;
-    font-weight: 800;
-    font-size: 52px;
-    color: #22c55e;
+    font-weight: 700;
+    font-size: 48px;
+    color: var(--lime);
     line-height: 1;
     min-width: 70px;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .plate-box,
+  .wait-plate {
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     text-align: center;
   }
 
   .plate-box {
-    background: #111;
-    border: 1px solid #444;
-    border-radius: 6px;
-    padding: 5px 10px;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.12em;
-    color: #fff;
-    text-align: center;
-    margin-top: 6px;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 13px;
+    margin-top: 8px;
     min-width: 70px;
   }
 
-  .work-queue-block-row {
+  .work-queue-block-row,
+  .wait-queue-block-row {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 10px;
     flex-shrink: 0;
   }
 
-  .work-queue-num-plate {
+  .work-queue-block-row { gap: 10px; }
+  .wait-queue-block-row { gap: 8px; }
+
+  .work-queue-num-plate,
+  .wait-queue-num-plate {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -486,42 +512,25 @@
   .motor-brand-logo img {
     display: block;
     object-fit: contain;
+    filter: grayscale(0.15) contrast(1.05);
   }
 
-  .motor-brand-logo--work img {
-    height: 44px;
-    width: auto;
-    max-width: 80px;
-  }
+  .motor-brand-logo--work img { height: 44px; width: auto; max-width: 80px; }
+  .motor-brand-logo--wait img { height: 34px; width: auto; max-width: 70px; }
 
-  .motor-brand-logo--wait img {
-    height: 34px;
-    width: auto;
-    max-width: 70px;
-  }
-
-  .work-card-mid {
-    flex: 1;
-  }
+  .work-card-mid { flex: 1; }
 
   .motor-merk-label {
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 800;
-    color: #c0392b;
-    letter-spacing: 0.14em;
+    font-weight: 700;
+    color: #c8c9c4;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     line-height: 1.1;
   }
 
-  .work-card-mid .motor-merk-label {
-    font-size: 14px;
-    margin-bottom: 4px;
-  }
-
-  .wait-mid .motor-merk-label {
-    font-size: 13px;
-    margin-bottom: 3px;
-  }
+  .work-card-mid .motor-merk-label { font-size: 13px; margin-bottom: 4px; }
+  .wait-mid .motor-merk-label { font-size: 12px; margin-bottom: 3px; }
 
   .work-vehicle {
     font-family: 'Rajdhani', sans-serif;
@@ -530,11 +539,12 @@
     color: #fff;
     line-height: 1.1;
     margin-bottom: 6px;
+    letter-spacing: 0.02em;
   }
 
   .work-meta {
     font-size: 12px;
-    color: #888;
+    color: var(--mute);
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -554,9 +564,9 @@
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 12px;
-    letter-spacing: 0.1em;
-    padding: 5px 14px;
-    border-radius: 6px;
+    letter-spacing: 0.12em;
+    padding: 5px 12px;
+    border-radius: 999px;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -564,55 +574,61 @@
   }
 
   .type-badge.express {
-    background: #7c3aed;
-    color: #fff;
-    border: 1px solid #9333ea;
+    background: rgba(176, 154, 214, 0.16);
+    color: #efe8f8;
+    border: 1px solid rgba(196, 181, 224, 0.55);
   }
 
   .type-badge.reguler {
     background: transparent;
-    color: #94a3b8;
-    border: 1px solid #475569;
+    color: #b7bdb4;
+    border: 1px solid rgba(255, 255, 255, 0.16);
   }
 
   .wo-num {
     font-size: 11px;
-    color: #666;
-    letter-spacing: 0.06em;
+    color: var(--mute);
+    letter-spacing: 0.08em;
     text-align: right;
   }
 
   .status-btn {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.1em;
-    padding: 6px 18px;
-    border-radius: 6px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    padding: 5px 14px;
+    border-radius: 999px;
     display: flex;
     align-items: center;
     gap: 6px;
     text-transform: uppercase;
   }
 
+  .status-pip {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
   .status-btn.proses {
-    background: rgba(34,197,94,0.15);
-    color: #22c55e;
-    border: 1px solid #22c55e;
+    background: rgba(140, 250, 1, 0.1);
+    color: var(--lime);
+    border: 1px solid rgba(140, 250, 1, 0.45);
   }
 
   .status-btn.menunggu {
-    background: rgba(245,158,11,0.1);
-    color: #f59e0b;
-    border: 1px solid rgba(245,158,11,0.4);
+    background: rgba(228, 211, 168, 0.08);
+    color: var(--gold);
+    border: 1px solid rgba(228, 211, 168, 0.4);
+    font-size: 11px;
+    padding: 4px 12px;
   }
 
-  /* ===== WAIT CARD (RIGHT) ===== */
   .wait-card {
-    flex-shrink: 0;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 12px 14px;
     display: flex;
     align-items: center;
@@ -621,42 +637,22 @@
 
   .wait-num {
     font-family: 'Orbitron', sans-serif;
-    font-weight: 800;
-    font-size: 32px;
-    color: #f59e0b;
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--gold);
     line-height: 1;
     min-width: 44px;
     text-align: center;
   }
 
-  .wait-num.regular { color: #888; }
+  .wait-num.regular { color: #9aa095; }
 
   .wait-plate {
-    background: #111;
-    border: 1px solid #444;
-    border-radius: 5px;
+    border-radius: 4px;
     padding: 3px 8px;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
     font-size: 11px;
-    letter-spacing: 0.1em;
-    color: #aaa;
-    text-align: center;
-    margin-top: 4px;
-  }
-
-  .wait-queue-block-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .wait-queue-num-plate {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    color: #ddd;
+    margin-top: 5px;
   }
 
   .wait-mid { flex: 1; }
@@ -671,7 +667,7 @@
 
   .wait-customer {
     font-size: 11px;
-    color: #666;
+    color: var(--mute);
     margin-top: 3px;
     display: flex;
     align-items: center;
@@ -688,25 +684,38 @@
 
   .wait-wo {
     font-size: 10px;
-    color: #555;
-    letter-spacing: 0.05em;
+    color: #6f756c;
+    letter-spacing: 0.06em;
     text-align: right;
   }
 
-  /* ===== FOOTER ===== */
-  .footer {
-    flex-shrink: 0;
-    height: 44px;
-    background: #111;
-    border-top: 1px solid #222;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 32px;
-    font-size: 12px;
-    color: #555;
-    padding: 0 24px;
+  #antrian-audio-hint {
+    cursor: pointer;
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    max-width: min(720px, 92vw);
+    padding: 10px 18px;
+    border-radius: 14px;
+    background: rgba(8, 10, 7, 0.94);
+    color: #f3f5f0;
+    font-size: 13px;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.45;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(140, 250, 1, 0.4);
   }
 
-  .footer-sep { color: #333; }
+  #antrian-audio-hint strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--lime);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+  }
 </style>

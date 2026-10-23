@@ -713,9 +713,6 @@ class WorkOrderController extends Controller
 
         $speedshop = Speedshop::query()->find($fixedSpeedshopId);
         $warehouseId = (int) ($speedshop?->warehouse_id ?: $speedshop?->mutasi_warehouse_id ?: $this->warehouseId() ?: 0);
-        if ($warehouseId <= 0) {
-            abort(403, 'Warehouse cabang tidak terdeteksi.');
-        }
 
         $p = MonitorAntrianPayload::build($warehouseId, $this->monitorAntrianSpeedshopScopeIds($fixedSpeedshopId));
         $videoUrl = env('SPEEDSHOP_TV_VIDEO_URL', 'https://www.youtube.com/embed/dQw4w9WgXcQ');
@@ -974,18 +971,18 @@ class WorkOrderController extends Controller
             ], 422);
         }
 
+        $targetSpeedshopId = Schema::hasColumn('service_orders', 'speedshop_id')
+            ? (int) ($service_order->speedshop_id ?? auth()->user()?->activeSpeedshopId() ?? 0)
+            : 0;
         $monitorWarehouseId = (int) ($service_order->warehouse_id ?? 0);
-        if ($monitorWarehouseId <= 0) {
+        if ($monitorWarehouseId <= 0 && $targetSpeedshopId <= 0) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Warehouse untuk monitor tidak terdeteksi. Pastikan akun terhubung ke cabang/gudang yang benar.',
+                'message' => 'Cabang monitor tidak terdeteksi.',
             ], 422);
         }
 
         $texts = $this->buildMonitorAntrianPanggilanTexts($service_order);
-        $targetSpeedshopId = Schema::hasColumn('service_orders', 'speedshop_id')
-            ? (int) ($service_order->speedshop_id ?? auth()->user()?->activeSpeedshopId() ?? 0)
-            : 0;
 
         $panggilanPayload = [
             'id' => (int) $service_order->id,

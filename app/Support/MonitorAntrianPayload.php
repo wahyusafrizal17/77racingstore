@@ -88,15 +88,17 @@ final class MonitorAntrianPayload
      */
     private static function baseServiceOrderQuery(int $warehouseId, ?array $speedshopScopeIds): Builder
     {
-        $q = ServiceOrder::with(['pelanggan', 'kendaraan', 'mekanik'])
-            ->where('warehouse_id', $warehouseId);
+        $q = ServiceOrder::with(['pelanggan', 'kendaraan', 'mekanik']);
+        if ($warehouseId > 0) {
+            $q->where('warehouse_id', $warehouseId);
+        }
 
         if (! Schema::hasColumn('service_orders', 'speedshop_id')) {
-            return $q;
+            return $warehouseId > 0 ? $q : $q->whereRaw('1 = 0');
         }
 
         if ($speedshopScopeIds === null) {
-            return $q;
+            return $warehouseId > 0 ? $q : $q->whereRaw('1 = 0');
         }
 
         $ids = array_values(array_unique(array_map(static fn ($id) => (int) $id, $speedshopScopeIds)));

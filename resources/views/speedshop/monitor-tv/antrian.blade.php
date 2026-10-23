@@ -41,11 +41,11 @@
     }
     .antrian-scroll-fade::before {
       top: 0;
-      background: linear-gradient(to bottom, rgba(10,10,10,0.9), transparent);
+      background: linear-gradient(to bottom, rgba(5,6,5,0.92), transparent);
     }
     .antrian-scroll-fade::after {
       bottom: 0;
-      background: linear-gradient(to top, rgba(10,10,10,0.9), transparent);
+      background: linear-gradient(to top, rgba(5,6,5,0.92), transparent);
     }
     .antrian-scroll-fade.is-scrollable::before,
     .antrian-scroll-fade.is-scrollable::after {
@@ -60,13 +60,9 @@
 
   <div class="header-left">
     <div class="logo-box">
-      <img src="{{ asset('images/logo-w.png') }}" alt="77racing" width="44" height="44" decoding="async" />
+      <img src="{{ asset('images/logo.png') }}" alt="77 Racing" decoding="async" />
     </div>
-    <div>
-      <div class="brand-name">77racing</div>
-      <div class="brand-sub">Speedshop Service Center</div>
-    </div>
-        </div>
+  </div>
 
   <div class="header-center">
     <div class="monitor-label">Monitoring Antrian</div>
@@ -169,16 +165,10 @@
 
 </div>
 
-  <div class="footer">
-  <span>🔔 Terima kasih telah mempercayakan servis kendaraan Anda kepada kami.</span>
-  <span class="footer-sep">|</span>
-  <span>Utamakan Keselamatan, Kepuasan Anda Prioritas Kami.</span>
-</div>
-
 <audio id="antrian-voice-audio" preload="auto" playsinline webkit-playsinline style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;overflow:hidden" aria-hidden="true"></audio>
 
-<div id="antrian-audio-hint" role="button" tabindex="0" aria-live="polite" aria-label="Sentuh untuk mengaktifkan suara monitor antrian" style="display:none;cursor:pointer;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9999;max-width:min(560px,92vw);padding:12px 18px;border-radius:14px;background:rgba(15,23,42,.88);color:#f8fafc;font-size:clamp(13px,1.9vw,16px);text-align:center;font-family:system-ui,-apple-system,sans-serif;line-height:1.4;box-shadow:0 8px 32px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12)">
-  <strong style="display:block;margin-bottom:4px;color:#fde68a">Suara panggilan</strong>
+<div id="antrian-audio-hint" role="button" tabindex="0" aria-live="polite" aria-label="Sentuh untuk mengaktifkan suara monitor antrian" style="display:none">
+  <strong>Suara panggilan</strong>
   Browser/TV memblokir audio otomatis sampai ada interaksi. Sentuh layar atau tekan OK pada kotak ini <strong>sekali</strong> untuk mengaktifkan chime dan pengumuman suara (MP3 dari server).
   </div>
 
@@ -416,7 +406,7 @@
         ${typeBadge}
         <div class="wo-num">${escapeHtml(item.srv)}</div>
         <div class="status-btn proses">
-          <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;"></div>
+          <div class="status-pip"></div>
           Proses
         </div>
       </div>
@@ -453,8 +443,8 @@
     <div class="wait-right">
       ${typeBadge}
       <div class="wait-wo">${escapeHtml(item.srv)}</div>
-      <div class="status-btn menunggu" style="font-size:11px;padding:4px 12px;">
-        <div style="width:7px;height:7px;background:#f59e0b;border-radius:50%;"></div>
+      <div class="status-btn menunggu">
+        <div class="status-pip"></div>
         Menunggu
       </div>
     </div>`;
