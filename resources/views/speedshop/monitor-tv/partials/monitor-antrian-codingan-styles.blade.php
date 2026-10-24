@@ -20,6 +20,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    padding: 2.4vh 2.8vw 2.8vh;
     background-color: var(--bg);
     background-image:
       radial-gradient(980px 420px at 0% -8%, rgba(140, 250, 1, 0.11), transparent 58%),
@@ -34,9 +35,9 @@
     content: '';
     position: fixed;
     inset: 0;
-    background: url("{{ asset('images/logo.png') }}") center 56% / 86vw auto no-repeat;
+    background: url("{{ asset('images/logo.png') }}") center 58% / 46vw auto no-repeat;
     mix-blend-mode: screen;
-    opacity: 0.3;
+    opacity: 0.16;
     pointer-events: none;
     z-index: 4;
   }
@@ -47,8 +48,9 @@
       linear-gradient(90deg, rgba(140, 250, 1, 0.07), transparent 32%),
       #000;
     border-bottom: 1px solid var(--line);
-    padding: 0 32px;
-    height: 92px;
+    border-radius: 18px 18px 0 0;
+    padding: 0 28px;
+    height: 76px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -75,7 +77,7 @@
     position: absolute;
     top: 0; right: 0;
     width: 240px;
-    height: 92px;
+    height: 76px;
     background: linear-gradient(125deg, transparent 46%, rgba(140, 250, 1, 0.14) 100%);
     pointer-events: none;
     z-index: 1;
@@ -95,7 +97,7 @@
   }
 
   .logo-box img {
-    height: 58px;
+    height: 48px;
     width: auto;
     display: block;
     object-fit: contain;
@@ -199,8 +201,8 @@
     flex-shrink: 0;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    padding: 16px 24px 14px;
+    gap: 12px;
+    padding: 12px 0 12px;
     background: transparent;
   }
 
@@ -265,8 +267,7 @@
     min-height: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    padding: 0 24px 20px;
+    gap: 14px;
     background: transparent;
   }
 
@@ -302,15 +303,6 @@
     align-items: center;
     gap: 10px;
   }
-
-  .panel-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    animation: blink 1.6s infinite;
-  }
-  .panel-dot.green  { background: var(--lime); box-shadow: 0 0 10px rgba(140, 250, 1, 0.65); }
-  .panel-dot.orange { background: var(--gold); }
-  .panel-dot.blue   { background: var(--silver); }
 
   .panel-title {
     font-family: 'Rajdhani', sans-serif;
@@ -387,16 +379,6 @@
     color: #ddd4ee;
     border-bottom-color: rgba(176, 154, 214, 0.28);
   }
-
-  .wait-queue-bucket-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .wait-queue-bucket-dot.express { background: #c4b5e0; }
-  .wait-queue-bucket-dot.reguler { background: #8d9388; }
 
   .wait-queue-bucket-scroll {
     flex: 1;
@@ -590,6 +572,14 @@
     color: var(--mute);
     letter-spacing: 0.08em;
     text-align: right;
+  }
+
+  .wo-mekanik {
+    font-size: 12px;
+    color: #d5d8d2;
+    letter-spacing: 0.02em;
+    text-align: right;
+    margin-top: 2px;
   }
 
   .status-btn {

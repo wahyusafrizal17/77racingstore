@@ -129,7 +129,6 @@
   <div class="panel right">
     <div class="panel-header">
       <div class="panel-title-row">
-        <div class="panel-dot orange"></div>
         <div class="panel-title">Menunggu Dipanggil</div>
       </div>
       <div class="panel-count" id="badge-menunggu">0 Kendaraan</div>
@@ -137,14 +136,12 @@
     <div class="panel-body panel-body--wait-split">
       <div class="wait-queue-bucket wait-queue-bucket--express">
         <div class="wait-queue-bucket-head">
-          <span class="wait-queue-bucket-dot express" aria-hidden="true"></span>
           Antrian Express
         </div>
         <div class="wait-queue-bucket-scroll antrian-scroll-fade" id="list-menunggu-express"></div>
           </div>
       <div class="wait-queue-bucket wait-queue-bucket--reguler">
         <div class="wait-queue-bucket-head">
-          <span class="wait-queue-bucket-dot reguler" aria-hidden="true"></span>
           Antrian Reguler
         </div>
         <div class="wait-queue-bucket-scroll antrian-scroll-fade" id="list-menunggu-reguler"></div>
@@ -155,7 +152,6 @@
   <div class="panel left">
     <div class="panel-header">
       <div class="panel-title-row">
-        <div class="panel-dot green"></div>
         <div class="panel-title">Sedang Dikerjakan</div>
       </div>
       <div class="panel-count" id="badge-proses">0 Kendaraan</div>
@@ -172,7 +168,7 @@
   Browser/TV memblokir audio otomatis sampai ada interaksi. Sentuh layar atau tekan OK pada kotak ini <strong>sekali</strong> untuk mengaktifkan chime dan pengumuman suara (MP3 dari server).
   </div>
 
-<script src="{{ asset('js/monitor-tv-antrian-audio.js') }}?v=23"></script>
+<script src="{{ asset('js/monitor-tv-antrian-audio.js') }}?v=25"></script>
   <script>
     let rawInProcessExpress = @json($inProcessExpressData ?? []);
     let rawInProcessStandard = @json($inProcessStandardData ?? []);
@@ -226,6 +222,7 @@
         })
       : null;
     let antrianMediaUnlocked = false;
+    let antrianUnlocking = false;
     const ANTRIAN_MEDIA_UNLOCK_KEY = `speedshop_monitor_antrian_audio_unlock_v1_ss_${monitorSpeedshopId || ('w_' + monitorWarehouseId)}`;
     const PANGGILAN_PLAYED_STORAGE_KEY = monitorSpeedshopId
       ? `speedshop_monitor_panggilan_played_v1_ss_${monitorSpeedshopId}`
@@ -234,22 +231,7 @@
     let chimePreloadAudio = null;
 
     function preloadChimeAudio() {
-      [ANTRIAN_CHIME_URL, ANTRIAN_CHIME_END_URL].forEach((url) => {
-        if (!url) return;
-        try {
-          const a = new Audio(url);
-          a.preload = 'auto';
-          a.volume = ANTRIAN_CHIME_VOLUME;
-          a.load();
-        } catch (e) { /* ignore */ }
-      });
-      if (!ANTRIAN_CHIME_URL || chimePreloadAudio) return;
-      try {
-        chimePreloadAudio = new Audio(ANTRIAN_CHIME_URL);
-        chimePreloadAudio.preload = 'auto';
-        chimePreloadAudio.volume = ANTRIAN_CHIME_VOLUME;
-        chimePreloadAudio.load();
-      } catch (e) { /* ignore */ }
+      /* Jangan buat Audio() kedua. Di browser TV elemen itu ikut bunyi, jadi chime/narasi terdengar dobel. */
     }
 
     const MOTOR_BRAND_LOGO = {
@@ -379,7 +361,7 @@
       const mech = escapeHtml((item.mechanic || '').trim() || '-');
       const typeBadge = item.express
         ? '<div class="type-badge express">⚡ Express</div>'
-        : '<div class="type-badge reguler">≡ Reguler</div>';
+        : '';
       const div = document.createElement('div');
       div.className = 'work-card' + (animate ? '' : ' is-quiet');
       div.setAttribute('data-key', String(item.key || ''));
@@ -399,16 +381,12 @@
         <div class="work-vehicle">${escapeHtml(item.tipe)}</div>
         <div class="work-meta">
           <span>👤 Pelanggan: ${cust}</span>
-          <span>🔧 Mekanik: ${mech}</span>
         </div>
       </div>
       <div class="work-card-right">
         ${typeBadge}
         <div class="wo-num">${escapeHtml(item.srv)}</div>
-        <div class="status-btn proses">
-          <div class="status-pip"></div>
-          Proses
-        </div>
+        <div class="wo-mekanik">🔧 ${mech}</div>
       </div>
     </div>`;
       return div;
@@ -421,7 +399,10 @@
       const numCls = item.express ? 'wait-num' : 'wait-num regular';
       const typeBadge = item.express
         ? '<div class="type-badge express">⚡ Express</div>'
-        : '<div class="type-badge reguler">≡ Reguler</div>';
+        : '';
+      const statusBtn = item.express
+        ? '<div class="status-btn menunggu"><div class="status-pip"></div>Menunggu</div>'
+        : '';
       const div = document.createElement('div');
       div.className = 'wait-card' + (animate ? '' : ' is-quiet');
       div.setAttribute('data-key', String(item.key || ''));
@@ -443,10 +424,7 @@
     <div class="wait-right">
       ${typeBadge}
       <div class="wait-wo">${escapeHtml(item.srv)}</div>
-      <div class="status-btn menunggu">
-        <div class="status-pip"></div>
-        Menunggu
-      </div>
+      ${statusBtn}
     </div>`;
       return div;
     }
@@ -817,9 +795,13 @@
 
       // Ada MP3 ElevenLabs: chime → narasi → penutup (semua dalam antrean audio).
       if (speechUrls.length) {
-        if (typeof antrianVoice.preloadUrls === 'function') {
-          antrianVoice.preloadUrls(speechUrls);
-        }
+        const seen = new Set();
+        speechUrls = speechUrls.filter((url) => {
+          const key = String(url);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
         if (typeof antrianVoice.enqueueChimeThenClips === 'function') {
           antrianVoice.enqueueChimeThenClips(speechUrls, { chimeGapMs: 0 });
         } else if (ANTRIAN_CHIME_URL) {
@@ -851,6 +833,22 @@
       }, 1100);
     }
 
+    function readPlayedPanggilanKey() {
+      try {
+        return sessionStorage.getItem(PANGGILAN_PLAYED_STORAGE_KEY)
+          || localStorage.getItem(PANGGILAN_PLAYED_STORAGE_KEY)
+          || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function markPlayedPanggilanKey(key) {
+      lastPanggilanPlayedKeyMem = key;
+      try { sessionStorage.setItem(PANGGILAN_PLAYED_STORAGE_KEY, key); } catch (e) { /* ignore */ }
+      try { localStorage.setItem(PANGGILAN_PLAYED_STORAGE_KEY, key); } catch (e) { /* ignore */ }
+    }
+
     function handleMonitorPanggilan(panggilan) {
       if (!panggilan || !Array.isArray(panggilan.texts) || !panggilan.texts.length) return;
 
@@ -861,20 +859,30 @@
 
       const key = panggilanPlayKey(panggilan);
       if (!key) return;
-      if (key === lastPanggilanPlayedKeyMem) return;
+      if (key === lastPanggilanPlayedKeyMem || readPlayedPanggilanKey() === key) {
+        lastPanggilanPlayedKeyMem = key;
+        return;
+      }
 
-      try {
-        if (sessionStorage.getItem(PANGGILAN_PLAYED_STORAGE_KEY) === key) {
+      const start = () => {
+        if (key === lastPanggilanPlayedKeyMem || readPlayedPanggilanKey() === key) {
           lastPanggilanPlayedKeyMem = key;
           return;
         }
-        sessionStorage.setItem(PANGGILAN_PLAYED_STORAGE_KEY, key);
-      } catch (e) {
-        /* private mode TV */
+        markPlayedPanggilanKey(key);
+        void playPanggilanMonitorAudio(panggilan);
+      };
+
+      // Dua tab di browser yang sama jangan sama-sama bunyi.
+      if (navigator.locks && typeof navigator.locks.request === 'function') {
+        navigator.locks.request(`monitor-antrian:${key}`, { ifAvailable: true }, (lock) => {
+          if (!lock) return;
+          start();
+        });
+        return;
       }
 
-      lastPanggilanPlayedKeyMem = key;
-      void playPanggilanMonitorAudio(panggilan);
+      start();
     }
 
     /**
@@ -938,7 +946,8 @@
       const cap = { capture: true, passive: true };
       const hintKeyCap = { capture: true, passive: false };
       const tryUnlock = () => {
-        if (antrianMediaUnlocked) return;
+        if (antrianMediaUnlocked || antrianUnlocking) return;
+        antrianUnlocking = true;
         try {
           if (voiceEl) {
             voiceEl.muted = false;
@@ -968,6 +977,7 @@
           hideAntrianAudioHint();
         };
         const finishFail = () => {
+          antrianUnlocking = false;
           showAntrianAudioHintIfLocked();
         };
         const run = antrianVoice

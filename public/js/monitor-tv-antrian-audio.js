@@ -241,6 +241,7 @@
 
       return new Promise(function (resolve) {
         var settled = false;
+        var playbackStarted = false;
         function fin() {
           if (settled) return;
           settled = true;
@@ -280,6 +281,7 @@
           }
         }
         function onEnded() {
+          if (!playbackStarted) return;
           fin();
         }
         function onErr() {
@@ -293,7 +295,7 @@
           clearCanplayTimer();
         }
         try {
-          audioEl.addEventListener('ended', onEnded, { once: true });
+          audioEl.addEventListener('ended', onEnded);
           audioEl.addEventListener('error', onErr, { once: true });
           audioEl.addEventListener('stalled', onStalled, { once: true });
           audioEl.addEventListener('canplaythrough', onReady, { once: true });
@@ -325,8 +327,11 @@
 
         try {
           audioEl.pause();
-          audioEl.src = url;
+          audioEl.removeAttribute('src');
           audioEl.load();
+          audioEl.src = url;
+          // Jangan load() setelah src diisi. Di browser TV load()+play()
+          // memutar file yang sama dua kali.
         } catch (e3) {
           fin();
           return;
@@ -346,12 +351,14 @@
         var p = audioEl.play();
         if (p !== undefined && typeof p.then === 'function') {
           p.then(function () {
+            playbackStarted = true;
             clearCanplayTimer();
             armStall();
           }).catch(function () {
             fin();
           });
         } else {
+          playbackStarted = true;
           clearCanplayTimer();
           armStall();
         }
@@ -545,7 +552,11 @@
 
     function tryUnlockWithChime() {
       if (!chimeUrl) return Promise.resolve(false);
+      if (playing) return Promise.resolve(true);
+      playing = true;
       return playUrlDirect(chimeUrl, { volume: chimeVolume }).then(function () {
+        if (queue.length) playNext();
+        else playing = false;
         return true;
       });
     }
