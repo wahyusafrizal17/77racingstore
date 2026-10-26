@@ -1793,11 +1793,16 @@ class ProductController extends Controller
 
         $totalStok = (int) (clone $base)->sum('speedshop_stock.jumlah');
 
+        // Di daftar MO, kolom "HPP Speedshop" adalah harga_jual_speedshop. products.hpp tidak diisi impor.
+        $hppColumn = ProductMasterCatalog::isWarehouseSharedKind((string) ($ctx['catalogKind'] ?? ''))
+            ? 'products.harga_jual_speedshop'
+            : 'products.hpp';
+
         $totalModal = (float) SpeedshopStock::query()
             ->join('products', 'products.id', '=', 'speedshop_stock.product_id')
             ->whereIn('speedshop_stock.speedshop_id', $ids)
             ->whereIn('speedshop_stock.product_id', $productIdsQuery)
-            ->sum(DB::raw('speedshop_stock.jumlah * COALESCE(products.hpp, 0)'));
+            ->sum(DB::raw('speedshop_stock.jumlah * COALESCE('.$hppColumn.', 0)'));
 
         return ['totalStok' => $totalStok, 'totalModal' => $totalModal];
     }
