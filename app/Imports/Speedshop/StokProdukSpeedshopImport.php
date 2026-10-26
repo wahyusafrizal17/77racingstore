@@ -29,9 +29,8 @@ class StokProdukSpeedshopImport implements ToCollection, WithHeadingRow
     public function collection(Collection $rows): void
     {
         $speedshopId = $this->speedshopId ?? Auth::user()?->activeSpeedshopId();
-        $warehouseId = Auth::user()?->activeWarehouseId();
-        if (! $speedshopId || $warehouseId === null) {
-            return;
+        if (! $speedshopId) {
+            throw new \RuntimeException('Pilih cabang speedshop di navbar terlebih dahulu.');
         }
 
         foreach ($rows as $row) {
@@ -41,13 +40,22 @@ class StokProdukSpeedshopImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            if (! $this->cellPresent($data, ['stok', 'stock', 'qty'])) {
+            $stokKeys = ['stok', 'stock', 'qty', 'stok_speedshop'];
+            if (! $this->cellPresent($data, $stokKeys)) {
                 $this->rowsSkipped++;
 
                 continue;
             }
 
-            $qty = max(0, (int) round((float) ($data['stok'] ?? $data['stock'] ?? $data['qty'] ?? 0)));
+            $qtyRaw = 0;
+            foreach ($stokKeys as $key) {
+                if (! array_key_exists($key, $data) || $data[$key] === null || $data[$key] === '') {
+                    continue;
+                }
+                $qtyRaw = $data[$key];
+                break;
+            }
+            $qty = max(0, (int) round((float) $qtyRaw));
 
             $query = Product::query()
                 ->forUser()
