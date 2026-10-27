@@ -26,6 +26,10 @@ class CheckRole
             return $next($request);
         }
 
+        if ($user->canAccessMoProductImageCatalogRoute($request->route()?->getName())) {
+            return $next($request);
+        }
+
         if (count(array_intersect($user->routeRoleAliases(), $roles)) > 0) {
             return $next($request);
         }

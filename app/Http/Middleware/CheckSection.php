@@ -33,18 +33,8 @@ class CheckSection
         }
 
         if (
-            in_array('warehouse', $sections, true)
-            && $user->canUploadMoProductImages()
-            && $request->routeIs(
-                'warehouse.master.produk',
-                'warehouse.master.produk.brand',
-                'warehouse.master.produk.unbranded',
-                'warehouse.master.produk.brand.logo',
-                'warehouse.master.produk.show',
-                'warehouse.master.produk.gambar',
-                'warehouse.master.produk.export',
-                'warehouse.master.produk.pdf',
-            )
+            count(array_intersect($sections, ['warehouse', 'speedshop'])) > 0
+            && $user->canAccessMoProductImageCatalogRoute($request->route()?->getName())
         ) {
             return $next($request);
         }

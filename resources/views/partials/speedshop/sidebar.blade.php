@@ -14,7 +14,8 @@
         $ssStafOnly = auth()->user()?->isSpeedshop() && auth()->user()?->role === 'Staf';
         $ssHeadArea = auth()->user()?->isSpeedshopHeadArea() ?? false;
         $ssManager = auth()->user()?->isSpeedshop() && auth()->user()?->isManager() && ! $ssHeadArea;
-        $dashboardRoute = $isOwner ? 'owner.dashboard' : 'speedshop.dashboard';
+        $moPortalOnly = auth()->user()?->usesModifikasiOriWelcomePortal() ?? false;
+        $dashboardRoute = auth()->user()?->dashboardRoute() ?? 'speedshop.dashboard';
         $ssOperasionalRoutes = [
             'speedshop.work-orders*',
             'speedshop.wip*',
@@ -54,11 +55,13 @@
         $verifikasiBadgeTitle = 'menunggu verifikasi';
     @endphp
     <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 pb-4 pt-3">
+        @unless($moPortalOnly)
         <a href="{{ route($dashboardRoute) }}"
            class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition {{ request()->routeIs('owner.dashboard*') || (! $isOwner && request()->routeIs('speedshop.dashboard')) ? 'bg-brand text-brand-ink shadow-lg shadow-brand/35' : 'text-white/65 hover:bg-white/10 hover:text-white' }}">
             <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
             Dashboard
         </a>
+        @endunless
         @if($ssManager && ! $isOwner)
         <a href="{{ route('speedshop.targets.index') }}"
            class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition {{ request()->routeIs('speedshop.targets*') ? 'bg-brand text-brand-ink shadow-lg shadow-brand/35' : 'text-white/65 hover:bg-white/10 hover:text-white' }}">
@@ -75,7 +78,15 @@
                 Riwayat
             </a>
         @elseif($ssStafOnly)
-            {{-- Staf Speedshop: Dashboard saja --}}
+            {{-- Staf Speedshop: Absensi (+ izin) saja --}}
+        @elseif($moPortalOnly)
+            @if(auth()->user()?->canUploadMoProductImages())
+            <a href="{{ route('speedshop.master.produk-mo') }}"
+               class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition {{ request()->routeIs('speedshop.master.produk-mo*') ? 'bg-brand text-brand-ink shadow-lg shadow-brand/35' : 'text-white/65 hover:bg-white/10 hover:text-white' }}">
+                <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                Produk 77racing
+            </a>
+            @endif
         @elseif($ssHeadArea)
             @include('partials.speedshop.sidebar-head-area')
         @elseif($ssManager && ! $isOwner)

@@ -20,17 +20,9 @@ class EnsureProductMasterCatalogAccess
             abort(403);
         }
 
-        $canUploadMoImage = $user->canUploadMoProductImages()
-            && $request->routeIs(
-                'warehouse.master.produk',
-                'warehouse.master.produk.brand',
-                'warehouse.master.produk.unbranded',
-                'warehouse.master.produk.brand.logo',
-                'warehouse.master.produk.show',
-                'warehouse.master.produk.gambar',
-                'warehouse.master.produk.export',
-                'warehouse.master.produk.pdf',
-            );
+        $canUploadMoImage = $user->canAccessMoProductImageCatalogRoute(
+            $request->route()?->getName()
+        );
 
         if (! $user->canManageProductMasterCatalog() && ! $canUploadMoImage) {
             abort(403, 'Anda tidak memiliki akses untuk mengelola master produk.');

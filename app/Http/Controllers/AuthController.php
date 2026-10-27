@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\AdminUserPayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -91,7 +92,7 @@ class AuthController extends Controller
         /** @var User|null $user */
         $user = Auth::user();
 
-        if ($user && $user->section === 'speedshop' && in_array($user->role, $this->allowedRoles(), true)) {
+        if ($user && $this->userMayLogin($user)) {
             return null;
         }
 
@@ -102,6 +103,17 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => 'Akun ini tidak punya akses 77 Racing Store.',
         ])->onlyInput('email');
+    }
+
+    private function userMayLogin(User $user): bool
+    {
+        if ($user->section === 'speedshop' && in_array($user->role, $this->allowedRoles(), true)) {
+            return true;
+        }
+
+        // Divisi "77racing" di form = section modifikasi_ori (legacy key).
+        return $user->section === User::SECTION_MODIFIKASI_ORI
+            && in_array($user->role, AdminUserPayload::modifikasiOriRoles(), true);
     }
 
     public function logout(Request $request)

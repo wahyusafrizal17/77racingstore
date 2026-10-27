@@ -661,6 +661,40 @@ class User extends Authenticatable
             || $this->isModifikasiOriStafMarketing();
     }
 
+    /**
+     * Route master produk MO yang boleh diakses marketing (browse + logo brand + export).
+     *
+     * @return list<string>
+     */
+    public static function moProductImageCatalogRouteNames(): array
+    {
+        return [
+            'speedshop.master.produk-mo',
+            'speedshop.master.produk-mo.show',
+            'speedshop.master.produk-mo.brand',
+            'speedshop.master.produk-mo.unbranded',
+            'speedshop.master.produk-mo.brand.logo',
+            'speedshop.master.produk-mo.export',
+            'speedshop.master.produk-mo.pdf',
+            // Legacy warehouse (jika masih terpanggil)
+            'warehouse.master.produk',
+            'warehouse.master.produk.brand',
+            'warehouse.master.produk.unbranded',
+            'warehouse.master.produk.brand.logo',
+            'warehouse.master.produk.show',
+            'warehouse.master.produk.gambar',
+            'warehouse.master.produk.export',
+            'warehouse.master.produk.pdf',
+        ];
+    }
+
+    public function canAccessMoProductImageCatalogRoute(?string $routeName): bool
+    {
+        return $this->canUploadMoProductImages()
+            && is_string($routeName)
+            && in_array($routeName, self::moProductImageCatalogRouteNames(), true);
+    }
+
     /** Tim yang menerima dan menangani chat reseller/customer marketplace. */
     public function canHandleExternalCustomerChats(): bool
     {

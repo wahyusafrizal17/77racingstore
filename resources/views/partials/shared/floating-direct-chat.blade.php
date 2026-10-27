@@ -6,7 +6,9 @@
         $directChatUnread = app(\App\Services\AppDirectChatService::class)->unreadTotal($dmUser);
     }
     $directChatFabOffset = $directChatFabOffset ?? '20px';
-    $isWarehouseDm = $dmUser?->canHandleExternalCustomerChats() ?? false;
+    // Route warehouse chat/reseller sudah dihapus dari 77 Racing Store.
+    $isWarehouseDm = ($dmUser?->canHandleExternalCustomerChats() ?? false)
+        && \Illuminate\Support\Facades\Route::has('warehouse.chat-reseller.messages');
 @endphp
 
 @if($showDirectChat)

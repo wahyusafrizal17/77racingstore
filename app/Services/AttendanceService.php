@@ -461,24 +461,8 @@ class AttendanceService
         if ($user->canAccessAdminPanel()) {
             return 'layouts.admin';
         }
-        if ($user->isOwner()) {
-            return 'layouts.speedshop';
-        }
-        if ($user->isModifikasiOriHeadAudit()) {
-            return $user->isHeadAuditSpeedshopContext()
-                ? 'layouts.speedshop'
-                : 'layouts.warehouse';
-        }
-        if ($user->isSpeedshop()) {
-            return 'layouts.speedshop';
-        }
-        if ($user->isProduksi() && ! $user->canAccessOperationalSection('warehouse')) {
-            return 'layouts.produksi';
-        }
-        if ($user->usesModifikasiOriWelcomePortal() || $user->isModifikasiOriHrAdmin()) {
-            return 'layouts.modifikasi-ori';
-        }
 
-        return 'layouts.warehouse';
+        // layouts.modifikasi-ori / warehouse / produksi sudah dihapus — semua portal pakai speedshop.
+        return 'layouts.speedshop';
     }
 }
