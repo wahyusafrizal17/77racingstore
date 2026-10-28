@@ -1200,7 +1200,7 @@ class LaporanController extends Controller
 
         $financials = SpeedshopLabaRugiFinancials::compute($dari, $sampai, $speedshopId, $warehouseId, $speedshopIds);
         $totalBiaya = (float) $financials['total_biaya'];
-        $totalBiayaSparepart = (float) $financials['biaya_hpp_sparepart'];
+        $totalBiayaSparepart = (float) $financials['biaya_hpp_sparepart'] + (float) ($financials['biaya_hpp_oli'] ?? 0);
         $totalBiayaOperasional = (float) $financials['biaya_operasional'];
         $totalBiayaNonOperasional = (float) $financials['biaya_non_operasional'];
 
@@ -1432,7 +1432,7 @@ class LaporanController extends Controller
             $pendapatanKotor = (float) $paymentTotals->sum();
 
             $biayaBreakdown = SpeedshopLabaRugiFinancials::biayaBreakdown($dayStart, $dayEnd, $speedshopId, $warehouseId, $speedshopIds);
-            $hppPart = (float) $biayaBreakdown['hpp_sparepart'];
+            $hppPart = (float) $biayaBreakdown['hpp_sparepart'] + (float) ($biayaBreakdown['hpp_oli'] ?? 0);
             $biayaOperasional = (float) $biayaBreakdown['biaya_operasional'];
             $biayaNonOperasional = (float) $biayaBreakdown['biaya_non_operasional'];
             $totalBiaya = $hppPart + $biayaOperasional + $biayaNonOperasional;
@@ -1499,7 +1499,7 @@ class LaporanController extends Controller
             'selectedSampai' => $period['selectedSampai'],
             'summaryOmzetKotor' => (float) $periodeBiaya['omzet_kotor'],
             'summaryTotalBiaya' => (float) $financials['total_biaya'],
-            'summaryTotalBiayaSparepart' => (float) $financials['biaya_hpp_sparepart'],
+            'summaryTotalBiayaSparepart' => (float) $financials['biaya_hpp_sparepart'] + (float) ($financials['biaya_hpp_oli'] ?? 0),
             'summaryTotalBiayaBop' => (float) $financials['biaya_operasional'] + (float) $financials['biaya_non_operasional'],
             'summaryGrossProfit' => (float) $periodeBiaya['profit_bersih'],
         ];

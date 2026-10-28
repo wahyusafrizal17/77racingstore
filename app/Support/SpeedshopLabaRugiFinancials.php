@@ -240,7 +240,8 @@ final class SpeedshopLabaRugiFinancials
         $sampaiYmd = $sampai->toDateString();
         $transaksiDate = ServiceOrder::transaksiDateSql('service_orders');
         $isOli = self::sqlCategoryIsOli('categories');
-        $hppLine = '(COALESCE(products.hpp, products.harga_pembelian, 0)) * ';
+        $woHppLine = '(COALESCE(service_order_products.hpp, NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * ';
+        $hppLine = '(COALESCE(NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * ';
 
         $woQuery = DB::table('service_order_products')
             ->join('service_orders', 'service_order_products.service_order_id', '=', 'service_orders.id')
@@ -252,8 +253,8 @@ final class SpeedshopLabaRugiFinancials
         self::applyServiceOrderTableScope($woQuery, $speedshopId, $warehouseId, $speedshopIds);
 
         $woTotals = $woQuery->selectRaw("
-            SUM(CASE WHEN {$isOli} THEN {$hppLine}service_order_products.qty ELSE 0 END) as oli,
-            SUM(CASE WHEN NOT ({$isOli}) THEN {$hppLine}service_order_products.qty ELSE 0 END) as sparepart
+            SUM(CASE WHEN {$isOli} THEN {$woHppLine}service_order_products.qty ELSE 0 END) as oli,
+            SUM(CASE WHEN NOT ({$isOli}) THEN {$woHppLine}service_order_products.qty ELSE 0 END) as sparepart
         ")->first();
 
         $tpQuery = DB::table('transaksi_penjualan_items')
@@ -573,7 +574,7 @@ final class SpeedshopLabaRugiFinancials
         self::applyServiceOrderTableScope($query, $speedshopId, $warehouseId, $speedshopIds);
 
         return (float) ($query->selectRaw(
-            'SUM((COALESCE(products.hpp, products.harga_pembelian, 0)) * service_order_products.qty) as total'
+            'SUM((COALESCE(service_order_products.hpp, NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * service_order_products.qty) as total'
         )->value('total') ?? 0);
     }
 
@@ -613,7 +614,7 @@ final class SpeedshopLabaRugiFinancials
 
         return (float) $query
             ->whereBetween('transaksi_penjualan.created_at', [$dari, $sampai])
-            ->selectRaw('SUM((COALESCE(products.hpp, products.harga_pembelian, 0)) * transaksi_penjualan_items.qty) as total')
+            ->selectRaw('SUM((COALESCE(NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * transaksi_penjualan_items.qty) as total')
             ->value('total') ?? 0;
     }
 

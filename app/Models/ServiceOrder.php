@@ -264,6 +264,29 @@ class ServiceOrder extends Model
         );
     }
 
+    protected static function booted(): void
+    {
+        static::updated(function (ServiceOrder $order) {
+            if ($order->wasChanged('status') && $order->status === 'selesai') {
+                $order->snapshotProductHpp();
+            }
+        });
+    }
+
+    /**
+     * Kunci HPP sparepart saat WO selesai agar laporan tidak berubah ketika HPP master naik.
+     */
+    public function snapshotProductHpp(): void
+    {
+        DB::table('service_order_products')
+            ->join('products', 'service_order_products.product_id', '=', 'products.id')
+            ->where('service_order_products.service_order_id', $this->id)
+            ->whereNull('service_order_products.hpp')
+            ->update([
+                'service_order_products.hpp' => DB::raw('COALESCE(NULLIF(products.hpp, 0), products.harga_pembelian, 0)'),
+            ]);
+    }
+
     public static function transaksiDateSql(string $table = 'service_orders'): string
     {
         return "DATE(COALESCE({$table}.tanggal_selesai, {$table}.tanggal_masuk))";
@@ -333,7 +356,7 @@ class ServiceOrder extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'service_order_products')
-            ->withPivot('qty', 'harga', 'diskon', 'catatan_diskon', 'diskon_verified_by', 'diskon_verified_at')->withTimestamps();
+            ->withPivot('qty', 'harga', 'hpp', 'diskon', 'catatan_diskon', 'diskon_verified_by', 'diskon_verified_at')->withTimestamps();
     }
 
     public function invoice()
