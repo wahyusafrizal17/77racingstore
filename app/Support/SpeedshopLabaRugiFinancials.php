@@ -240,8 +240,9 @@ final class SpeedshopLabaRugiFinancials
         $sampaiYmd = $sampai->toDateString();
         $transaksiDate = ServiceOrder::transaksiDateSql('service_orders');
         $isOli = self::sqlCategoryIsOli('categories');
-        $woHppLine = '(COALESCE(service_order_products.hpp, NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * ';
-        $hppLine = '(COALESCE(NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * ';
+        $productHpp = ProductMasterCatalog::speedshopHppSql('products');
+        $woHppLine = "COALESCE(service_order_products.hpp, {$productHpp}) * ";
+        $hppLine = "{$productHpp} * ";
 
         $woQuery = DB::table('service_order_products')
             ->join('service_orders', 'service_order_products.service_order_id', '=', 'service_orders.id')
@@ -573,8 +574,10 @@ final class SpeedshopLabaRugiFinancials
 
         self::applyServiceOrderTableScope($query, $speedshopId, $warehouseId, $speedshopIds);
 
+        $productHpp = ProductMasterCatalog::speedshopHppSql('products');
+
         return (float) ($query->selectRaw(
-            'SUM((COALESCE(service_order_products.hpp, NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * service_order_products.qty) as total'
+            "SUM(COALESCE(service_order_products.hpp, {$productHpp}) * service_order_products.qty) as total"
         )->value('total') ?? 0);
     }
 
@@ -614,7 +617,7 @@ final class SpeedshopLabaRugiFinancials
 
         return (float) $query
             ->whereBetween('transaksi_penjualan.created_at', [$dari, $sampai])
-            ->selectRaw('SUM((COALESCE(NULLIF(products.hpp, 0), products.harga_pembelian, 0)) * transaksi_penjualan_items.qty) as total')
+            ->selectRaw('SUM('.ProductMasterCatalog::speedshopHppSql('products').' * transaksi_penjualan_items.qty) as total')
             ->value('total') ?? 0;
     }
 

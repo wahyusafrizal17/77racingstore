@@ -43,6 +43,23 @@ final class ProductMasterCatalog
     }
 
     /**
+     * Ekspresi SQL HPP speedshop per produk, selaras kolom HPP di Master Produk:
+     * katalog MO / merchandise / consumable memakai harga_jual_speedshop ("HPP Speedshop"), lainnya products.hpp.
+     */
+    public static function speedshopHppSql(string $alias = 'products'): string
+    {
+        $partLuar = Product::JENIS_PART_LUAR;
+        $merchandise = Product::JENIS_MERCHANDISE;
+        $consumable = Product::JENIS_CONSUMABLE;
+        $isShared = "({$alias}.jenis_produk IN ('{$merchandise}', '{$consumable}')"
+            ." OR (COALESCE({$alias}.jenis_produk, '') <> '{$partLuar}' AND COALESCE({$alias}.speedshop_scope_id, 0) = 0))";
+
+        return "(CASE WHEN {$isShared}"
+            ." THEN COALESCE(NULLIF({$alias}.harga_jual_speedshop, 0), NULLIF({$alias}.hpp, 0), {$alias}.harga_pembelian, 0)"
+            ." ELSE COALESCE(NULLIF({$alias}.hpp, 0), {$alias}.harga_pembelian, 0) END)";
+    }
+
+    /**
      * Klasifikasi baris produk ke salah satu katalog master.
      */
     public static function kindForProduct(Product $product): string

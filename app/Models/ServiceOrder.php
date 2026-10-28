@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ProductMasterCatalog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -283,7 +284,7 @@ class ServiceOrder extends Model
             ->where('service_order_products.service_order_id', $this->id)
             ->whereNull('service_order_products.hpp')
             ->update([
-                'service_order_products.hpp' => DB::raw('COALESCE(NULLIF(products.hpp, 0), products.harga_pembelian, 0)'),
+                'service_order_products.hpp' => DB::raw(ProductMasterCatalog::speedshopHppSql('products')),
             ]);
     }
 
