@@ -30,7 +30,7 @@ class EnsureSpeedshopSetoranCompleted
             return $next($request);
         }
 
-        $pending = $service->pendingSetoranDatesBeforeToday((int) $ssid);
+        $pending = $service->blockingSetoranDatesBeforeToday((int) $ssid);
         $first = $pending[0] ?? null;
 
         return redirect()

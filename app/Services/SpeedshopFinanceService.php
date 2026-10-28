@@ -30,6 +30,12 @@ use Illuminate\Support\Facades\Schema;
 class SpeedshopFinanceService
 {
     public const DEFAULT_MODAL_LACI_PER_HARI = 2_000_000;
+
+    /**
+     * Tanggal paling awal yang memblokir transaksi bila belum disetor. Cek setoran sempat tidak aktif
+     * (16–27 Okt 2026) karena speedshop dilepas dari warehouse; tanggal itu tetap bisa disetor tapi tidak memblokir.
+     */
+    public const WAJIB_SETORAN_MULAI = '2026-10-28';
     public const POCKET_LACI = 'laci';
 
     public const POCKET_CASH_BESAR = 'cash_besar';
@@ -247,7 +253,7 @@ class SpeedshopFinanceService
     public function ensureInvoiceLedgersForSpeedshopDay(int $speedshopId, string $dateYmd): void
     {
         $sp = Speedshop::query()->find($speedshopId);
-        if (! $sp?->warehouse_id) {
+        if (! $sp) {
             return;
         }
 
@@ -471,7 +477,7 @@ class SpeedshopFinanceService
 
         $speedshopId = (int) $scope->speedshopId;
         $sp = Speedshop::query()->find($speedshopId);
-        if (! $sp?->warehouse_id) {
+        if (! $sp) {
             return $empty;
         }
 
@@ -633,7 +639,7 @@ class SpeedshopFinanceService
     private function sumPendapatanTunaiBetween(int $speedshopId, string $startYmd, string $endYmd): int
     {
         $sp = Speedshop::query()->find($speedshopId);
-        if (! $sp?->warehouse_id) {
+        if (! $sp) {
             return 0;
         }
 
@@ -738,14 +744,14 @@ class SpeedshopFinanceService
 
     /**
      * Tanggal kalender (Y-m-d) sebelum tanggal tertentu yang masih punya invoice namun belum setoran selesai.
-     * Dipakai untuk memblokir pengajuan tanggal baru bila ada tanggal sebelumnya yang belum disetor.
+     * Untuk blokir transaksi / pengajuan, pakai {@see blockingSetoranDatesBeforeDate}.
      *
      * @return list<string>
      */
     public function pendingSetoranDatesBeforeDate(int $speedshopId, string $dateYmdExclusive): array
     {
         $sp = Speedshop::query()->find($speedshopId);
-        if (! $sp?->warehouse_id) {
+        if (! $sp) {
             return [];
         }
 
@@ -792,13 +798,32 @@ class SpeedshopFinanceService
         return $out;
     }
 
+    /**
+     * Tanggal belum disetor yang memblokir transaksi / pengajuan setoran tanggal berikutnya.
+     *
+     * @return list<string>
+     */
+    public function blockingSetoranDatesBeforeDate(int $speedshopId, string $dateYmdExclusive): array
+    {
+        return array_values(array_filter(
+            $this->pendingSetoranDatesBeforeDate($speedshopId, $dateYmdExclusive),
+            fn (string $d) => $d >= self::WAJIB_SETORAN_MULAI,
+        ));
+    }
+
+    /** @return list<string> */
+    public function blockingSetoranDatesBeforeToday(int $speedshopId): array
+    {
+        return $this->blockingSetoranDatesBeforeDate($speedshopId, now()->toDateString());
+    }
+
     public function canTransactToday(?int $speedshopId): bool
     {
         if (! $speedshopId) {
             return true;
         }
 
-        return $this->pendingSetoranDatesBeforeToday($speedshopId) === [];
+        return $this->blockingSetoranDatesBeforeToday($speedshopId) === [];
     }
 
     /**
@@ -1260,7 +1285,7 @@ class SpeedshopFinanceService
     {
         // Setoran per tanggal boleh lebih dari satu kali.
         // Yang diblokir: bila ada tanggal sebelumnya yang punya invoice namun belum ada setoran completed.
-        $missing = $this->pendingSetoranDatesBeforeDate($speedshopId, $tanggalSetorYmd);
+        $missing = $this->blockingSetoranDatesBeforeDate($speedshopId, $tanggalSetorYmd);
         if ($missing !== []) {
             $first = $missing[0] ?? null;
             $firstLabel = $first ? Carbon::parse($first)->format('d/m/Y') : null;

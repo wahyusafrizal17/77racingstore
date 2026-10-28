@@ -151,7 +151,7 @@ class KeuanganSetoranController extends Controller
         $snap = $finance->computeDaySetoranSnapshotForScope($scope, $tanggal);
         $missingBefore = $scope->isWarehouse()
             ? []
-            : $finance->pendingSetoranDatesBeforeDate((int) $scope->speedshopId, $tanggal);
+            : $finance->blockingSetoranDatesBeforeDate((int) $scope->speedshopId, $tanggal);
 
         return response()->json([
             'tanggal' => $tanggal,
