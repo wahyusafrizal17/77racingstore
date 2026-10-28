@@ -282,9 +282,9 @@ class ServiceOrder extends Model
         DB::table('service_order_products')
             ->join('products', 'service_order_products.product_id', '=', 'products.id')
             ->where('service_order_products.service_order_id', $this->id)
-            ->whereNull('service_order_products.hpp')
+            ->where(fn ($q) => $q->whereNull('service_order_products.hpp')->orWhere('service_order_products.hpp', 0))
             ->update([
-                'service_order_products.hpp' => DB::raw(ProductMasterCatalog::speedshopHppSql('products')),
+                'service_order_products.hpp' => DB::raw('NULLIF('.ProductMasterCatalog::speedshopHppSql('products').', 0)'),
             ]);
     }
 

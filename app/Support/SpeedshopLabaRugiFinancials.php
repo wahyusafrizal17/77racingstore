@@ -241,7 +241,7 @@ final class SpeedshopLabaRugiFinancials
         $transaksiDate = ServiceOrder::transaksiDateSql('service_orders');
         $isOli = self::sqlCategoryIsOli('categories');
         $productHpp = ProductMasterCatalog::speedshopHppSql('products');
-        $woHppLine = "COALESCE(service_order_products.hpp, {$productHpp}) * ";
+        $woHppLine = "COALESCE(NULLIF(service_order_products.hpp, 0), {$productHpp}) * ";
         $hppLine = "{$productHpp} * ";
 
         $woQuery = DB::table('service_order_products')
@@ -577,7 +577,7 @@ final class SpeedshopLabaRugiFinancials
         $productHpp = ProductMasterCatalog::speedshopHppSql('products');
 
         return (float) ($query->selectRaw(
-            "SUM(COALESCE(service_order_products.hpp, {$productHpp}) * service_order_products.qty) as total"
+            "SUM(COALESCE(NULLIF(service_order_products.hpp, 0), {$productHpp}) * service_order_products.qty) as total"
         )->value('total') ?? 0);
     }
 
