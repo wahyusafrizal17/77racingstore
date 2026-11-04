@@ -354,10 +354,8 @@ class MasterProdukController extends Controller
             auth()->user()->activeWarehouseId(),
             $ssid ? (int) $ssid : null,
         );
+        // Katalog MO / merchandise / consumable boleh tanpa warehouse (speedshop sudah dilepas dari warehouse).
         $scopeId = $this->resolveSpeedshopScopeIdForCreate($ssid ? (int) $ssid : null);
-        if ($this->isWarehouseSharedCatalog() && ! $warehouseId) {
-            return back()->with('error', 'Warehouse cabang tidak terdeteksi. Pilih cabang speedshop di navbar terlebih dahulu.');
-        }
         if (in_array($this->masterCatalogKind(), [
             ProductMasterCatalog::SPEEDSHOP_SUPPLIER,
             ProductMasterCatalog::PART_LUAR,
