@@ -15,7 +15,7 @@
 
     @if(! $hasValidator)
     <div class="flash error" style="margin-bottom: 16px">
-        Pejabat penyetuju izin belum lengkap di sistem (Head/Manager). Hubungi Head HR agar akun Head & Manager divisi Anda tersedia.
+        Manager penyetuju izin belum tersedia di sistem. Hubungi Head HR.
         @if($approverSummary !== [])
         <ul style="margin-top:8px; list-style:disc; padding-left:18px">
             @foreach($approverSummary as $line)

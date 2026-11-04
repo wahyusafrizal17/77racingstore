@@ -70,7 +70,6 @@ class LeaveRequestService
      */
     public function pendingForReviewer(User $reviewer, int $perPage = 15): LengthAwarePaginator
     {
-        $this->healPendingHeadOnlyMarketingLeaves();
         $this->healPendingLeavesWaitingOnlyForOwner();
 
         return $this->validationQueueQuery($reviewer)
@@ -79,21 +78,9 @@ class LeaveRequestService
 
     public function pendingCountForReviewer(User $reviewer): int
     {
-        $this->healPendingHeadOnlyMarketingLeaves();
         $this->healPendingLeavesWaitingOnlyForOwner();
 
         return (int) $this->pendingActionQuery($reviewer)->count();
-    }
-
-    /** Selesaikan / potong alur pengajuan Staf Marketing yang masih memakai rantai lama. */
-    private function healPendingHeadOnlyMarketingLeaves(): void
-    {
-        LeaveRequest::query()
-            ->where('status', LeaveRequest::STATUS_PENDING)
-            ->whereHas('user', fn (Builder $q) => $q->where('role', User::ROLE_MODIFIKASI_STAF_MARKETING))
-            ->with(['user', 'headApprover', 'managerApprover', 'ownerApprover'])
-            ->orderBy('id')
-            ->each(fn (LeaveRequest $leave) => $this->healHeadOnlyMarketingLeave($leave));
     }
 
     /** Selesaikan pengajuan yang hanya menggantung di TTD "Diketahui" Owner. */
@@ -310,7 +297,6 @@ class LeaveRequestService
 
     public function sign(LeaveRequest $leave, User $reviewer, string $aksi): LeaveRequest
     {
-        $this->healHeadOnlyMarketingLeave($leave);
         $leave = $leave->fresh(['user', 'reviewer', 'headApprover', 'managerApprover', 'ownerApprover']);
 
         if (! $leave->isPending()) {
@@ -333,53 +319,8 @@ class LeaveRequestService
         return $leave->fresh(['user', 'reviewer', 'headApprover', 'managerApprover', 'ownerApprover']);
     }
 
-    /**
-     * Pengajuan Staf Marketing lama masih memakai alur Head→Manager→Owner.
-     * Setelah Head (atau sudah lewat Head) menandatangani, langsung disetujui.
-     */
-    public function healHeadOnlyMarketingLeave(LeaveRequest $leave): LeaveRequest
-    {
-        if (! $leave->isPending()) {
-            return $leave;
-        }
-
-        $applicant = $leave->relationLoaded('user') ? $leave->user : $leave->user()->first();
-        if (! $applicant || ! LeaveApprovalRouting::isHeadOnlyApprovalStaf($applicant)) {
-            return $leave;
-        }
-
-        // Belum ada TTD Head: potong rantai ke Head saja (pengajuan baru / masih menunggu Head).
-        if ($leave->requiresHeadSignature() && ! $leave->headSigned()) {
-            if ($leave->manager_approver_id !== null || $leave->owner_approver_id !== null) {
-                $leave->manager_approver_id = null;
-                $leave->manager_signed_at = null;
-                $leave->manager_signature_token = null;
-                $leave->owner_approver_id = null;
-                $leave->owner_signed_at = null;
-                $leave->owner_signature_token = null;
-                if ($leave->head_approver_id) {
-                    $leave->attendance_validator_id = $leave->head_approver_id;
-                }
-                $leave->save();
-            }
-
-            return $leave->fresh(['user', 'headApprover', 'managerApprover', 'ownerApprover']);
-        }
-
-        // Head sudah TTD (atau tidak perlu Head): selesaikan tanpa menunggu Manager/Owner.
-        if (! $leave->requiresHeadSignature() || $leave->headSigned()) {
-            $reviewer = $leave->headApprover
-                ?? $leave->managerApprover
-                ?? $applicant;
-            $this->finalizeApproval($leave, $reviewer);
-        }
-
-        return $leave->fresh(['user', 'reviewer', 'headApprover', 'managerApprover', 'ownerApprover']);
-    }
-
     public function approve(LeaveRequest $leave, User $reviewer): LeaveRequest
     {
-        $this->healHeadOnlyMarketingLeave($leave);
         $leave = $leave->fresh(['user', 'reviewer', 'headApprover', 'managerApprover', 'ownerApprover']);
 
         if (! $leave->isPending()) {

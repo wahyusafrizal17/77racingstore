@@ -185,11 +185,10 @@
                 <p class="izin-surat-signatures-title">Persetujuan · Tanda Tangan Digital (QR)</p>
                 @if($leave->isPending())
                 <p class="no-print izin-surat-sign-meta" style="text-align:center;margin:-8px 0 16px;line-height:1.55;max-width:560px;margin-left:auto;margin-right:auto">
-                    @if($leave->manager_approver_id === null && ! $leave->requiresOwnerAcknowledgment())
-                        Staf Marketing: cukup Verifikasi Head Marketing.
+                    @if($leave->head_approver_id === null && $leave->owner_approver_id === null)
+                        Cukup persetujuan Manager.
                     @else
-                        77racing &amp; Speedshop (staf): Verifikasi 1 Head → Verifikasi 2 Manager. Diketahui Owner tanpa TTD.
-                        Head: cukup Manager. Staf Marketing: cukup Head Marketing.
+                        Pengajuan lama: Verifikasi 1 Head → Verifikasi 2 Manager. Diketahui Owner tanpa TTD.
                     @endif
                 </p>
                 @endif

@@ -6,7 +6,6 @@ use App\Models\LeaveRequest;
 use App\Services\AttendanceScheduleService;
 use App\Services\AttendanceService;
 use App\Services\LeaveRequestService;
-use App\Support\LeaveApprovalRouting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -107,13 +106,9 @@ class LeaveRequestController extends Controller
             return back()->with('error', $e->getMessage())->withInput();
         }
 
-        $success = LeaveApprovalRouting::isHeadOnlyApprovalStaf($user)
-            ? 'Pengajuan izin berhasil dikirim. Menunggu tanda tangan Head Marketing.'
-            : 'Pengajuan izin berhasil dikirim. Menunggu tanda tangan Head & Manager.';
-
         return redirect()
             ->route('izin.index')
-            ->with('success', $success);
+            ->with('success', 'Pengajuan izin berhasil dikirim. Menunggu persetujuan Manager.');
     }
 
     public function show(Request $request, LeaveRequest $leaveRequest): View|RedirectResponse
@@ -124,9 +119,7 @@ class LeaveRequestController extends Controller
 
         $leave = $this->leaves->ensurePemohonSignature(
             $this->leaves->healOptionalOwnerAcknowledgment(
-                $this->leaves->healHeadOnlyMarketingLeave(
-                    $leaveRequest->load(['user', 'reviewer', 'assignedValidator', 'headApprover', 'managerApprover', 'ownerApprover'])
-                )
+                $leaveRequest->load(['user', 'reviewer', 'assignedValidator', 'headApprover', 'managerApprover', 'ownerApprover'])
             )
         );
 
