@@ -223,8 +223,8 @@ class AbsensiRecapController extends Controller
                 return collect();
             }
 
-            // Manager speedshop juga melihat karyawan non-speedshop (tidak terikat cabang), selaras /admin/users.
-            $includeNonSpeedshop = $reviewer->isManager();
+            // Manager & Accounting speedshop juga melihat karyawan non-speedshop (tidak terikat cabang), selaras /admin/users.
+            $includeNonSpeedshop = $reviewer->isManager() || $reviewer->isSpeedshopAccounting();
 
             $query->where(function ($scope) use ($speedshopIds, $includeNonSpeedshop) {
                 $scope->where(function ($cabang) use ($speedshopIds) {
