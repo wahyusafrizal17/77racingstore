@@ -106,7 +106,6 @@ class LeaveRequest extends Model
             self::TYPE_IZIN => 'Izin',
             self::TYPE_SAKIT => 'Sakit',
             self::TYPE_CUTI => 'Cuti',
-            self::TYPE_WFH => 'WFH',
             self::TYPE_MASUK_LIBUR => 'Masuk Hari Libur',
             self::TYPE_SETENGAH_MASUK => 'Izin 1/2 Hari (Masuk 12.00)',
             self::TYPE_SETENGAH_PULANG => 'Izin 1/2 Hari (Pulang 12.00)',
@@ -125,26 +124,44 @@ class LeaveRequest extends Model
             || AdminUserPayload::isModifikasiOriSection($user->section);
     }
 
+    /** WFH hanya untuk Manager, Accounting & Staf Marketing (semua divisi). */
     public static function canSubmitWfh(User $user): bool
     {
-        return self::isModifikasiOriApplicant($user);
+        return in_array((string) $user->role, [
+            'Manager',
+            'Accounting',
+            User::ROLE_MODIFIKASI_STAF_MARKETING,
+        ], true);
     }
 
     /** @return array<string, string> Jenis pengajuan sesuai divisi & role. */
     public static function typeOptionsForUser(User $user): array
     {
         if ($user->section === 'speedshop') {
-            return self::speedshopTypeOptions();
+            $options = self::speedshopTypeOptions();
+        } elseif (self::isModifikasiOriApplicant($user)) {
+            $options = self::modifikasiOriTypeOptions();
+        } else {
+            $options = [
+                self::TYPE_SAKIT => 'Sakit',
+                self::TYPE_CUTI => 'Cuti',
+            ];
         }
 
-        if (self::isModifikasiOriApplicant($user)) {
-            return self::modifikasiOriTypeOptions();
+        if (! self::canSubmitWfh($user)) {
+            return $options;
         }
 
-        return [
-            self::TYPE_SAKIT => 'Sakit',
-            self::TYPE_CUTI => 'Cuti',
-        ];
+        // Sisipkan WFH tepat setelah Cuti.
+        $withWfh = [];
+        foreach ($options as $key => $label) {
+            $withWfh[$key] = $label;
+            if ($key === self::TYPE_CUTI) {
+                $withWfh[self::TYPE_WFH] = 'WFH';
+            }
+        }
+
+        return $withWfh;
     }
 
     /** @return list<string> */
