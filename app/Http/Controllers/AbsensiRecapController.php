@@ -223,17 +223,30 @@ class AbsensiRecapController extends Controller
                 return collect();
             }
 
-            $query->where('section', 'speedshop')
-                ->where(function ($inner) use ($speedshopIds) {
-                    $inner->whereIn('speedshop_id', $speedshopIds)
-                        ->orWhere(function ($fallback) use ($speedshopIds) {
-                            $fallback->whereNull('speedshop_id')
-                                ->whereHas(
-                                    'assignedSpeedshops',
-                                    fn ($assigned) => $assigned->whereIn('speedshops.id', $speedshopIds)
-                                );
+            // Manager speedshop juga melihat karyawan non-speedshop (tidak terikat cabang), selaras /admin/users.
+            $includeNonSpeedshop = $reviewer->isManager();
+
+            $query->where(function ($scope) use ($speedshopIds, $includeNonSpeedshop) {
+                $scope->where(function ($cabang) use ($speedshopIds) {
+                    $cabang->where('section', 'speedshop')
+                        ->where(function ($inner) use ($speedshopIds) {
+                            $inner->whereIn('speedshop_id', $speedshopIds)
+                                ->orWhere(function ($fallback) use ($speedshopIds) {
+                                    $fallback->whereNull('speedshop_id')
+                                        ->whereHas(
+                                            'assignedSpeedshops',
+                                            fn ($assigned) => $assigned->whereIn('speedshops.id', $speedshopIds)
+                                        );
+                                });
                         });
                 });
+
+                if ($includeNonSpeedshop) {
+                    $scope->orWhere(fn ($other) => $other->where(
+                        fn ($section) => $section->whereNull('section')->orWhere('section', '!=', 'speedshop')
+                    ));
+                }
+            });
         } elseif (! $seesAllEmployees) {
             $ids = AttendanceValidationRouting::subordinateIdsFor($reviewer);
             if ($ids === []) {
