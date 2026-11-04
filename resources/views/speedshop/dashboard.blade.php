@@ -206,6 +206,10 @@
         @endif
     </div>
 
+    @include('partials.speedshop.dashboard-manager-target-achievement')
+
+    @include('partials.speedshop.dashboard-manager-mekanik-performance')
+
     <div x-show="showDetail" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @keydown.escape.window="closeDetail()">
         <div x-show="showDetail" x-transition.opacity class="fixed inset-0 bg-black/50" @click="closeDetail()"></div>
         <div class="flex min-h-full items-center justify-center p-4 sm:p-6">

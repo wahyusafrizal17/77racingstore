@@ -363,10 +363,12 @@ class SpeedshopDashboardController extends Controller
                 $currentPeriodLabel,
             )
             : [];
-        $dashboardMekanikPerformance = $managerDashboardCharts
+        // Accounting speedshop juga melihat Pencapaian Target & Performance Mekanik (seperti Manager).
+        $showTargetAndMekanikPerformance = $managerDashboardCharts || (bool) auth()->user()?->isSpeedshopAccounting();
+        $dashboardMekanikPerformance = $showTargetAndMekanikPerformance
             ? $this->collectDashboardMekanikPerformance($request, $dari, $sampai)
             : ['all' => [], 'by_cabang' => []];
-        $dashboardTargetAchievement = $managerDashboardCharts
+        $dashboardTargetAchievement = $showTargetAndMekanikPerformance
             ? $this->collectDashboardTargetAchievement($request, $dari, $sampai, $dashboardSpeedshopIds)
             : [];
 
