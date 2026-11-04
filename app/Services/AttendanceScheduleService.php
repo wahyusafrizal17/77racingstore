@@ -84,11 +84,13 @@ class AttendanceScheduleService
             || $user->usesModifikasiOriWelcomePortal()
             || AdminUserPayload::isModifikasiOriSection($user->section)
         ) {
+            // Lokasi Warehouse bisa sudah tidak ada (speedshop dilepas dari warehouse): pakai PSA aktif pertama.
             return AttendanceLocation::query()
                 ->active()
                 ->where('code', AttendanceLocation::CODE_WAREHOUSE)
                 ->orderBy('id')
-                ->first();
+                ->first()
+                ?? AttendanceLocation::query()->active()->orderBy('id')->first();
         }
 
         return null;
