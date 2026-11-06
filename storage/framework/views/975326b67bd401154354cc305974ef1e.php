@@ -113,7 +113,7 @@
     </div>
 </div>
 
-<?php if (! $__env->hasRenderedOnce('a33c9267-038b-494a-833a-1a7c9e3396eb')): $__env->markAsRenderedOnce('a33c9267-038b-494a-833a-1a7c9e3396eb'); ?>
+<?php if (! $__env->hasRenderedOnce('a474c377-eb0e-46c9-ad5f-109257c2de3a')): $__env->markAsRenderedOnce('a474c377-eb0e-46c9-ad5f-109257c2de3a'); ?>
 <?php $__env->startPush('scripts'); ?>
 <script>
 function globalProductStockSearch() {

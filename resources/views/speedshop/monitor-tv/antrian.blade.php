@@ -170,6 +170,19 @@
 
 <script src="{{ asset('js/monitor-tv-antrian-audio.js') }}?v=25"></script>
   <script>
+    // Tinggi layar nyata (ikut zoom browser TV) untuk body; lihat --app-h di styles.
+    (function syncMonitorAppHeight() {
+      const apply = () => {
+        const h = document.documentElement.clientHeight || window.innerHeight;
+        if (h > 0) {
+          document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px');
+        }
+      };
+      apply();
+      window.addEventListener('resize', apply);
+      window.addEventListener('orientationchange', apply);
+    })();
+
     let rawInProcessExpress = @json($inProcessExpressData ?? []);
     let rawInProcessStandard = @json($inProcessStandardData ?? []);
     let rawQueueExpress = @json($queueExpressData ?? []);

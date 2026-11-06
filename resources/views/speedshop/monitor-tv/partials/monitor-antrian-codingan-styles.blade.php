@@ -12,11 +12,26 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html {
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg);
+  }
+
+  /*
+   * Kunci ke seluruh layar tanpa vh: browser TV sering tidak menghitung ulang vh saat di-zoom out,
+   * sehingga panel berhenti di tengah layar. --app-h diisi JS dari window.innerHeight sebagai fallback.
+   */
   body {
     color: var(--silver);
     font-family: 'Inter', sans-serif;
-    height: 100vh;
-    height: 100dvh;
+    position: fixed;
+    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: var(--app-h, auto);
     display: flex;
     flex-direction: column;
     overflow: hidden;
