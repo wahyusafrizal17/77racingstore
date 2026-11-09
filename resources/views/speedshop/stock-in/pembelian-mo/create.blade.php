@@ -149,10 +149,17 @@
     <div class="flex flex-col gap-3 ss-dash-enter sm:flex-row sm:items-start sm:justify-between" style="--ss-delay: 0ms">
         <div>
             <h1 class="text-[20px] font-semibold leading-tight tracking-tight text-gray-900">Buat Purchase Order</h1>
-            <p class="mt-1 text-[13px] text-gray-500">Ajukan permintaan stok ke warehouse 77racing</p>
+            <p class="mt-1 text-[13px] text-gray-500">Ajukan permintaan stok ke {{ $warehouseName ?: 'warehouse Modifikasi Ori' }} (terhubung via API)</p>
         </div>
         <a href="{{ route('speedshop.stock-in.pembelian-mo.index') }}" class="btn-secondary shrink-0">← Kembali</a>
     </div>
+
+    @if(!empty($catalogError))
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 ss-dash-enter" style="--ss-delay: 40ms">
+            <p class="font-semibold">Katalog warehouse Modifikasi Ori tidak dapat dimuat</p>
+            <p class="mt-0.5">{{ $catalogError }}</p>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-12 ss-dash-enter" style="--ss-delay: 80ms">
         <div class="space-y-5 lg:col-span-8">
@@ -160,7 +167,7 @@
                 <div class="flex flex-col gap-3 border-b border-gray-100 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
                     <div class="section-hd" style="margin-bottom:0">
                         <h2>Daftar Item</h2>
-                        <p>Pilih sparepart Modifikasi Ori (sama dengan menu Inventori → Sparepart Modifikasi Ori)</p>
+                        <p>Pilih produk dari katalog warehouse Modifikasi Ori (stok WH = stok warehouse Modifikasi Ori saat ini)</p>
                     </div>
                     <span class="wo-badge" x-text="formItems.length + ' item · ' + formItems.reduce((s, i) => s + (Number(i.qty)||0), 0) + ' qty'"></span>
                 </div>
@@ -253,7 +260,7 @@
                         </div>
                         <div class="summary-total">
                             <span>Warehouse Tujuan</span>
-                            <span>{{ $warehouseName ?? '77racing' }}</span>
+                            <span>{{ $warehouseName ?: 'Modifikasi Ori' }}</span>
                         </div>
                     </div>
 
@@ -458,13 +465,16 @@ function purchaseOrderUnifiedCreate() {
                     },
                     body: JSON.stringify({
                         catatan: this.catatan || null,
-                        items: this.formItems.map(i => ({ product_id: i.product_id, qty: Number(i.qty || 0) })),
+                        // product_id berisi SKU katalog Modifikasi Ori (lihat PembelianMOController::create).
+                        items: this.formItems.map(i => ({ sku: i.product_id, qty: Number(i.qty || 0) })),
                     }),
                 });
                 if (!res.ok) {
                     const d = await res.json().catch(() => ({}));
                     this.loading = false;
-                    Swal.fire('Error', d.message || 'Gagal menyimpan.', 'error');
+                    const firstError = d.errors ? Object.values(d.errors).flat()[0] : null;
+                    await Swal.fire('Error', firstError || d.message || 'Gagal menyimpan.', 'error');
+                    if (d.redirect) window.location.href = d.redirect;
                     return;
                 }
                 const data = await res.json().catch(() => ({}));

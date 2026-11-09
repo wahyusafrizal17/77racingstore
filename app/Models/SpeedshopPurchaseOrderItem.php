@@ -13,6 +13,9 @@ class SpeedshopPurchaseOrderItem extends Model
         'purchase_order_id',
         'product_id',
         'qty',
+        /** Qty yang dikirim warehouse Modifikasi Ori (null = belum diproses). */
+        'qty_approved',
+        'harga_satuan',
     ];
 
     public function purchaseOrder(): BelongsTo

@@ -239,6 +239,12 @@ Route::middleware(['auth', 'section:speedshop', 'head-audit.finance-readonly', '
         Route::get('/stock-in/pembelian-mo/lookup', [PembelianMOController::class, 'lookup'])->name('stock-in.pembelian-mo.lookup');
         Route::post('/stock-in/pembelian-mo/purchase-order', [PembelianMOController::class, 'storePurchaseOrder'])->name('stock-in.pembelian-mo.purchase-order.store');
         Route::get('/stock-in/pembelian-mo/purchase-order/{purchaseOrder}', [PembelianMOController::class, 'showPurchaseOrder'])->name('stock-in.pembelian-mo.purchase-order.show');
+        // PO ke warehouse Modifikasi Ori via API partner.
+        Route::post('/stock-in/pembelian-mo/purchase-order/{purchaseOrder}/mo-resend', [PembelianMOController::class, 'moResend'])->name('stock-in.pembelian-mo.purchase-order.mo-resend');
+        Route::post('/stock-in/pembelian-mo/purchase-order/{purchaseOrder}/mo-refresh', [PembelianMOController::class, 'moRefresh'])->name('stock-in.pembelian-mo.purchase-order.mo-refresh');
+        Route::post('/stock-in/pembelian-mo/purchase-order/{purchaseOrder}/mo-cancel', [PembelianMOController::class, 'moCancel'])->name('stock-in.pembelian-mo.purchase-order.mo-cancel');
+        Route::post('/stock-in/pembelian-mo/purchase-order/{purchaseOrder}/mo-receive', [PembelianMOController::class, 'moReceive'])->name('stock-in.pembelian-mo.purchase-order.mo-receive');
+        Route::post('/stock-in/pembelian-mo/purchase-order/{purchaseOrder}/mo-reject', [PembelianMOController::class, 'moReject'])->name('stock-in.pembelian-mo.purchase-order.mo-reject');
         Route::get('/stock-in/pembelian-mo/mutasi/{mutasi}', [PembelianMOController::class, 'showMutasi'])->name('stock-in.pembelian-mo.show-mutasi');
         Route::post('/stock-in/pembelian-mo/mutasi/{mutasi}/verify', [PembelianMOController::class, 'verifyMutasi'])->name('stock-in.pembelian-mo.verify-mutasi');
         Route::post('/stock-in/pembelian-mo/mutasi/{mutasi}/reject', [PembelianMOController::class, 'rejectMutasi'])->name('stock-in.pembelian-mo.reject-mutasi');

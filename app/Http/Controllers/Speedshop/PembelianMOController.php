@@ -16,10 +16,15 @@ use App\Models\TransaksiOfflineItem;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseTransaksiItem;
+use App\Services\ModifikasiOri\ModifikasiOriApiException;
+use App\Services\ModifikasiOri\MoPurchaseOrderService;
 use App\Support\ProductMasterCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class PembelianMOController extends Controller
 {
@@ -42,8 +47,38 @@ class PembelianMOController extends Controller
         return null;
     }
 
+    private function moService(): MoPurchaseOrderService
+    {
+        return app(MoPurchaseOrderService::class);
+    }
+
+    /** Status daftar PO (filter index) untuk PO yang dikirim ke Modifikasi Ori via API. */
+    private function moIndexStatus(SpeedshopPurchaseOrder $po): string
+    {
+        return match ($po->mo_status) {
+            SpeedshopPurchaseOrder::MO_STATUS_APPROVED => 'processed',
+            SpeedshopPurchaseOrder::MO_STATUS_SHIPPED => 'speedshop_decision',
+            SpeedshopPurchaseOrder::MO_STATUS_REJECTED_BY_WAREHOUSE => 'warehouse_decision',
+            SpeedshopPurchaseOrder::MO_STATUS_RECEIVED => $po->received_at !== null ? 'finished' : 'speedshop_decision',
+            SpeedshopPurchaseOrder::MO_STATUS_CANCELLED,
+            SpeedshopPurchaseOrder::MO_STATUS_REJECTED_BY_PARTNER => 'finished',
+            default => 'submitted',
+        };
+    }
+
     private function mapPurchaseOrderRow(SpeedshopPurchaseOrder $po): array
     {
+        if ($po->isModifikasiOriPo()) {
+            return [
+                'kode' => $po->invoice_no ?: $po->kode,
+                'tanggal' => $po->created_at,
+                'speedshop' => auth()->user()->speedshop?->nama ?? '-',
+                'status' => $this->moIndexStatus($po),
+                'dibuat_oleh' => $po->creator?->name ?? '-',
+                'detail_url' => route('speedshop.stock-in.pembelian-mo.purchase-order.show', $po),
+            ];
+        }
+
         $to = $po->mirroredTransaksiOffline;
         $status = 'submitted';
 
@@ -76,6 +111,21 @@ class PembelianMOController extends Controller
     public function index(Request $request)
     {
         $speedshopId = auth()->user()->activeSpeedshopId();
+
+        // Tarik status terbaru dari Modifikasi Ori (maks. sekali per menit per outlet; gagal = tampilkan data terakhir).
+        if ($speedshopId && Cache::add('mo_po_index_sync_'.$speedshopId, 1, now()->addMinute())) {
+            try {
+                $this->moService()->syncMany(
+                    SpeedshopPurchaseOrder::query()
+                        ->where('speedshop_id', $speedshopId)
+                        ->whereNotNull('mo_status')
+                        ->whereNotIn('mo_status', SpeedshopPurchaseOrder::MO_FINAL_STATUSES)
+                        ->get()
+                );
+            } catch (ModifikasiOriApiException $e) {
+                Log::warning('Sinkron status PO Modifikasi Ori gagal', ['error' => $e->getMessage()]);
+            }
+        }
 
         $purchaseOrders = $speedshopId
             ? SpeedshopPurchaseOrder::with(['items.product', 'warehouse', 'mirroredTransaksiOffline.user', 'creator'])
@@ -129,6 +179,25 @@ class PembelianMOController extends Controller
         $speedshopId = auth()->user()->activeSpeedshopId();
         if (! $speedshopId || (int) $purchaseOrder->speedshop_id !== (int) $speedshopId) {
             abort(403, 'Purchase Order ini bukan untuk Speedshop Anda.');
+        }
+
+        if ($purchaseOrder->isModifikasiOriPo()) {
+            $syncError = null;
+            try {
+                $this->moService()->sync($purchaseOrder);
+            } catch (ModifikasiOriApiException $e) {
+                $syncError = $e->getMessage();
+            }
+            $purchaseOrder->refresh()->load(['items.product', 'speedshop', 'creator', 'receiver', 'rejector']);
+
+            $user = auth()->user();
+
+            return view('speedshop.stock-in.pembelian-mo.show-mo-purchase-order', [
+                'purchaseOrder' => $purchaseOrder,
+                'syncError' => $syncError,
+                'warehouseName' => (string) config('services.modifikasi_ori.warehouse_name'),
+                'canDecide' => $user->isManager() || $user->isSpeedshopStaf(),
+            ]);
         }
 
         $purchaseOrder->load([
@@ -198,209 +267,192 @@ class PembelianMOController extends Controller
         return view('speedshop.stock-in.pembelian-mo.show-purchase-order', compact('purchaseOrder', 'supplierByProduct'));
     }
 
+    /**
+     * Form Buat PO: produk diambil dari katalog warehouse Modifikasi Ori via API,
+     * stok SS = stok lokal 77 Racing (speedshop_stock) untuk SKU yang sama.
+     */
     public function create()
     {
         $speedshopId = auth()->user()->activeSpeedshopId();
-        $warehouseId = $this->purchaseOrderWarehouseId();
+        $client = $this->moService()->client();
 
-        $warehouse = null;
-        $suppliers = $speedshopId
-            ? Supplier::with('kota')->forSpeedshop((int) $speedshopId)->orderBy('nama')->get()
-            : Supplier::with('kota')->forSection(Supplier::SECTION_SPEEDSHOP)->orderBy('nama')->get();
-
-        // Dropdown produk: selaras Inventori → Produk 77racing (stok-produk-mo).
-        $speedshopProducts = collect();
-        if ($speedshopId) {
-            $products = $this->productsQueryForPembelianMo((int) $speedshopId)
-                ->with(['brand:id,nama'])
-                ->get(['id', 'kode_produk', 'kode_supplier', 'nama_produk', 'brand_id']);
-
-            $stockByProduct = SpeedshopStock::query()
-                ->where('speedshop_id', $speedshopId)
-                ->whereIn('product_id', $products->pluck('id'))
-                ->pluck('jumlah', 'product_id');
-
-            $warehouseStockByKode = collect();
-            if ($warehouseId) {
-                $warehouseStockByKode = Product::query()
-                    ->where('warehouse_id', (int) $warehouseId)
-                    ->where('speedshop_scope_id', 0)
-                    ->whereIn('kode_produk', $products->pluck('kode_produk')->filter()->unique()->values())
-                    ->get(['kode_produk', 'jumlah'])
-                    ->mapWithKeys(fn (Product $row) => [
-                        mb_strtoupper(trim((string) $row->kode_produk)) => (int) $row->jumlah,
-                    ]);
-            }
-
-            $speedshopProducts = $products->map(function (Product $p) use ($stockByProduct, $warehouseStockByKode, $warehouseId) {
-                $kodeKey = mb_strtoupper(trim((string) $p->kode_produk));
-
-                return [
-                    'id' => (int) $p->id,
-                    'kode_produk' => (string) ($p->kode_produk ?? ''),
-                    'kode_supplier' => (string) ($p->kode_supplier ?? ''),
-                    'nama_produk' => (string) ($p->nama_produk ?? ''),
-                    'brand_id' => $p->brand_id ? (int) $p->brand_id : null,
-                    'brand_nama' => (string) ($p->brand?->nama ?? ''),
-                    'jumlah' => (int) ($stockByProduct[$p->id] ?? 0),
-                    'jumlah_wh' => (int) ($warehouseStockByKode[$kodeKey] ?? $p->warehouseInventoryStock($warehouseId ? (int) $warehouseId : null)),
-                ];
-            })->values();
-        }
-
-        $supplierByProduct = [];
-        if ($warehouseId && $speedshopId && $speedshopProducts->count() > 0) {
-            $productIds = $speedshopProducts->pluck('id')->filter()->unique()->values();
-
-            $rows = WarehouseTransaksiItem::query()
-                ->select([
-                    'warehouse_transaksi_items.product_id',
-                    'suppliers.kode_supplier',
-                    'suppliers.nama as nama_supplier',
-                ])
-                ->join('warehouse_transaksis', 'warehouse_transaksis.id', '=', 'warehouse_transaksi_items.warehouse_transaksi_id')
-                ->join('users', 'users.id', '=', 'warehouse_transaksis.user_id')
-                ->join('suppliers', 'suppliers.id', '=', 'warehouse_transaksi_items.supplier_id')
-                ->where('warehouse_transaksis.warehouse_id', (int) $warehouseId)
-                ->where('users.section', 'speedshop')
-                ->where('users.speedshop_id', (int) $speedshopId)
-                ->whereIn('warehouse_transaksi_items.product_id', $productIds)
-                ->whereNotNull('warehouse_transaksi_items.supplier_id')
-                ->orderByDesc('warehouse_transaksi_items.id')
-                ->get();
-
-            foreach ($rows as $r) {
-                $pid = (int) $r->product_id;
-                if (! array_key_exists($pid, $supplierByProduct)) {
-                    $supplierByProduct[$pid] = [
-                        'kode_supplier' => $r->kode_supplier ?: null,
-                        'nama_supplier' => $r->nama_supplier ?: null,
-                    ];
-                }
+        $catalogError = null;
+        $catalog = [];
+        if (! $client->isConfigured()) {
+            $catalogError = 'Integrasi Modifikasi Ori belum dikonfigurasi. Isi MO_PARTNER_API_URL dan MO_PARTNER_API_TOKEN di .env.';
+        } else {
+            try {
+                $catalog = $client->catalog();
+            } catch (ModifikasiOriApiException $e) {
+                $catalogError = $e->getMessage();
             }
         }
+
+        $skus = collect($catalog)->map(fn (array $r) => mb_strtoupper(trim((string) ($r['sku'] ?? ''))))->filter()->unique()->values();
+
+        $localStockBySku = collect();
+        if ($speedshopId && $skus->isNotEmpty()) {
+            $localStockBySku = SpeedshopStock::query()
+                ->join('products', 'products.id', '=', 'speedshop_stock.product_id')
+                ->where('speedshop_stock.speedshop_id', (int) $speedshopId)
+                ->whereIn('products.kode_produk', $skus)
+                ->selectRaw('UPPER(TRIM(products.kode_produk)) as sku, SUM(speedshop_stock.jumlah) as jumlah')
+                ->groupByRaw('UPPER(TRIM(products.kode_produk))')
+                ->pluck('jumlah', 'sku');
+        }
+
+        $products = collect($catalog)->map(function (array $r) use ($localStockBySku) {
+            $sku = mb_strtoupper(trim((string) ($r['sku'] ?? '')));
+
+            return [
+                // TomSelect memakai "id" sebagai value — untuk PO Modifikasi Ori nilainya SKU.
+                'id' => $sku,
+                'kode_produk' => $sku,
+                'kode_supplier' => (string) ($r['kode_supplier'] ?? ''),
+                'nama_produk' => (string) ($r['nama'] ?? ''),
+                'brand_nama' => (string) ($r['brand'] ?? ''),
+                'harga' => (int) ($r['harga'] ?? 0),
+                'jumlah' => (int) ($localStockBySku[$sku] ?? 0),
+                'jumlah_wh' => (int) ($r['stok_warehouse'] ?? 0),
+            ];
+        })->filter(fn (array $r) => $r['id'] !== '')->values();
 
         return view('speedshop.stock-in.pembelian-mo.create', [
             'speedshopId' => $speedshopId,
-            'warehouseId' => $warehouseId,
-            'warehouseName' => $warehouse?->nama,
-            'suppliers' => $suppliers,
-            'supplierByProduct' => $supplierByProduct,
+            'warehouseName' => (string) config('services.modifikasi_ori.warehouse_name'),
+            'catalogError' => $catalogError,
             // Keep variable name to avoid refactor in blade JS.
-            'warehouseProducts' => $speedshopProducts,
+            'warehouseProducts' => $products,
         ]);
     }
 
     public function storePurchaseOrder(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'catatan' => ['nullable', 'string', 'max:500'],
-            'items' => ['nullable', 'array'],
-            'items.*.product_id' => ['required_with:items', 'exists:products,id'],
-            'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.sku' => ['required', 'string', 'max:100'],
+            'items.*.qty' => ['required', 'integer', 'min:1'],
+        ], [
+            'items.required' => 'Minimal 1 item wajib diisi.',
         ]);
 
         $speedshopId = auth()->user()->activeSpeedshopId();
-        $warehouseId = $this->purchaseOrderWarehouseId();
         if (! $speedshopId) {
             return response()->json(['message' => 'Speedshop tidak terdeteksi.'], 422);
         }
-        if (! $warehouseId) {
-            return response()->json(['message' => 'Warehouse tidak terdeteksi.'], 422);
-        }
-        if (empty($request->items) || ! is_array($request->items) || count($request->items) < 1) {
-            return response()->json(['message' => 'Minimal 1 item wajib diisi.'], 422);
-        }
 
-        // Pastikan produk tersedia di warehouse untuk setiap item yang dipesan.
-        // (Stok warehouse bisa diproses/ditentukan oleh pihak warehouse saat approve.)
-        foreach ($request->items as $it) {
-            $p = $this->productsQueryForPembelianMo((int) $speedshopId)
-                ->whereKey($it['product_id'])
-                ->where('warehouse_id', $warehouseId)
+        try {
+            $po = $this->moService()->create((int) $speedshopId, auth()->user(), $validated['catatan'] ?? null, $validated['items']);
+        } catch (ModifikasiOriApiException $e) {
+            // PO lokal mungkin sudah tersimpan dengan status "Gagal terkirim" — bisa dikirim ulang dari detail.
+            $failed = SpeedshopPurchaseOrder::query()
+                ->where('speedshop_id', $speedshopId)
+                ->where('created_by', auth()->id())
+                ->where('mo_status', SpeedshopPurchaseOrder::MO_STATUS_SEND_FAILED)
+                ->where('created_at', '>=', now()->subMinutes(2))
+                ->latest('id')
                 ->first();
-            if (! $p) {
-                return response()->json(['message' => 'Produk tidak valid untuk outlet Speedshop ini.'], 422);
-            }
-        }
 
-        $po = null;
-        DB::transaction(function () use ($request, $speedshopId, $warehouseId, &$po) {
-            $kode = SpeedshopPurchaseOrder::generateKodeSpeedshop((int) $speedshopId, now());
-            $po = SpeedshopPurchaseOrder::create([
-                'kode' => $kode,
-                // invoice_no dipakai sebagai "kode/invoice" di list; isi sama dengan kode agar konsisten.
-                'invoice_no' => $kode,
-                'speedshop_id' => $speedshopId,
-                'warehouse_id' => $warehouseId,
-                'tipe' => 'modifikasi_ori',
-                'status' => 'pending',
-                'created_by' => auth()->id(),
-                'catatan' => $request->catatan ? trim((string) $request->catatan) : null,
-            ]);
-
-            foreach ($request->items as $it) {
-                SpeedshopPurchaseOrderItem::create([
-                    'purchase_order_id' => $po->id,
-                    'product_id' => (int) $it['product_id'],
-                    'qty' => (int) $it['qty'],
-                ]);
-            }
-
-            // Draft Transaksi Offline untuk alur verifikasi / stok Speedshop (tanpa mengurangi stok warehouse dulu).
-            // speedshop_purchase_order_id menghubungkan ke PO agar baris ini tidak tampil ganda di daftar Purchase Order.
-            $noTransaksi = TransaksiOffline::generateNoTransaksi();
-
-            $transaksi = TransaksiOffline::create([
-                'no_transaksi' => $noTransaksi,
-                'tujuan' => 'speedshop',
-                'pelanggan_id' => null,
-                'speedshop_id' => $speedshopId,
-                'nama_toko' => $po->speedshop?->nama ?? 'Speedshop',
-                'alamat' => null,
-                'no_hp' => null,
-                'petugas_id' => null,
-                'jenis_pembayaran' => null,
-                'user_id' => auth()->id(),
-                'warehouse_id' => $warehouseId,
-                'speedshop_purchase_order_id' => $po->id,
-            ]);
-
-            foreach ($request->items as $it) {
-                TransaksiOfflineItem::create([
-                    'transaksi_offline_id' => $transaksi->id,
-                    'product_id' => (int) $it['product_id'],
-                    'qty' => (int) $it['qty'],
-                ]);
-            }
-        });
-
-        // Notifikasi ke Manager Warehouse agar memproses pengajuan PO
-        $warehouseUsers = User::query()
-            ->where('section', 'warehouse')
-            ->where('role', 'Manager')
-            ->where(function ($q) use ($warehouseId) {
-                $q->where('warehouse_id', $warehouseId)->orWhereNull('warehouse_id');
-            })
-            ->get();
-
-        foreach ($warehouseUsers as $u) {
-            AppNotification::create([
-                'user_id' => $u->id,
-                'type' => 'speedshop_purchase_order_pending',
-                'title' => 'Purchase Order Speedshop Menunggu Proses',
-                'message' => auth()->user()->name.' mengajukan PO '.($po->invoice_no ?: $po->kode),
-                'data' => ['speedshop_purchase_order_id' => $po->id],
-                // PO Speedshop punya menu khusus di sisi Warehouse.
-                'link' => route('warehouse.po-speedshop.index'),
-            ]);
+            return response()->json([
+                'message' => $failed
+                    ? 'PO tersimpan tetapi belum terkirim ke Modifikasi Ori: '.$e->getMessage().' Buka detail PO lalu klik "Kirim Ulang".'
+                    : $e->getMessage(),
+                'redirect' => $failed ? route('speedshop.stock-in.pembelian-mo.purchase-order.show', $failed) : null,
+            ], 502);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Purchase Order berhasil dibuat.',
-            'redirect' => route('speedshop.stock-in.pembelian-mo.index'),
+            'message' => 'Purchase Order '.$po->kode.' berhasil dikirim ke warehouse Modifikasi Ori.',
+            'redirect' => route('speedshop.stock-in.pembelian-mo.purchase-order.show', $po),
         ]);
+    }
+
+    private function authorizeMoPurchaseOrder(SpeedshopPurchaseOrder $purchaseOrder): void
+    {
+        $speedshopId = auth()->user()->activeSpeedshopId();
+        if (! $speedshopId || (int) $purchaseOrder->speedshop_id !== (int) $speedshopId) {
+            abort(403, 'Purchase Order ini bukan untuk Speedshop Anda.');
+        }
+        if (! $purchaseOrder->isModifikasiOriPo()) {
+            abort(404);
+        }
+    }
+
+    /** Jalankan aksi PO Modifikasi Ori lalu kembali ke detail dengan pesan sukses/gagal. */
+    private function runMoAction(SpeedshopPurchaseOrder $purchaseOrder, callable $action, string $successMessage)
+    {
+        $back = route('speedshop.stock-in.pembelian-mo.purchase-order.show', $purchaseOrder);
+
+        try {
+            $action();
+        } catch (ModifikasiOriApiException $e) {
+            return redirect($back)->with('error', $e->getMessage());
+        } catch (ValidationException $e) {
+            return redirect($back)->with('error', collect($e->errors())->flatten()->first() ?: 'Aksi tidak dapat diproses.');
+        }
+
+        return redirect($back)->with('success', $successMessage);
+    }
+
+    public function moResend(SpeedshopPurchaseOrder $purchaseOrder)
+    {
+        $this->authorizeMoPurchaseOrder($purchaseOrder);
+        if ($purchaseOrder->mo_status !== SpeedshopPurchaseOrder::MO_STATUS_SEND_FAILED) {
+            return redirect()->route('speedshop.stock-in.pembelian-mo.purchase-order.show', $purchaseOrder)
+                ->with('error', 'PO ini sudah terkirim ke Modifikasi Ori.');
+        }
+
+        return $this->runMoAction($purchaseOrder, fn () => $this->moService()->submit($purchaseOrder), 'PO berhasil dikirim ke warehouse Modifikasi Ori.');
+    }
+
+    public function moRefresh(SpeedshopPurchaseOrder $purchaseOrder)
+    {
+        $this->authorizeMoPurchaseOrder($purchaseOrder);
+
+        return $this->runMoAction($purchaseOrder, fn () => $this->moService()->syncMany(collect([$purchaseOrder])), 'Status PO diperbarui dari Modifikasi Ori.');
+    }
+
+    public function moCancel(Request $request, SpeedshopPurchaseOrder $purchaseOrder)
+    {
+        $this->authorizeMoPurchaseOrder($purchaseOrder);
+        $validated = $request->validate(['cancelled_reason' => ['required', 'string', 'max:500']]);
+
+        return $this->runMoAction(
+            $purchaseOrder,
+            fn () => $this->moService()->cancel($purchaseOrder, auth()->user(), trim($validated['cancelled_reason'])),
+            'Purchase Order dibatalkan.'
+        );
+    }
+
+    public function moReceive(SpeedshopPurchaseOrder $purchaseOrder)
+    {
+        $this->authorizeMoPurchaseOrder($purchaseOrder);
+        if (! (auth()->user()->isManager() || auth()->user()->isSpeedshopStaf())) {
+            abort(403, 'Hanya Manager/Staf Speedshop yang dapat menerima barang.');
+        }
+
+        return $this->runMoAction(
+            $purchaseOrder,
+            fn () => $this->moService()->receive($purchaseOrder, auth()->user()),
+            'Barang diterima. Stok Speedshop telah ditambahkan dan tagihan dibuat di Modifikasi Ori.'
+        );
+    }
+
+    public function moReject(Request $request, SpeedshopPurchaseOrder $purchaseOrder)
+    {
+        $this->authorizeMoPurchaseOrder($purchaseOrder);
+        if (! (auth()->user()->isManager() || auth()->user()->isSpeedshopStaf())) {
+            abort(403, 'Hanya Manager/Staf Speedshop yang dapat menolak barang.');
+        }
+        $validated = $request->validate(['rejected_reason' => ['required', 'string', 'max:500']]);
+
+        return $this->runMoAction(
+            $purchaseOrder,
+            fn () => $this->moService()->reject($purchaseOrder, auth()->user(), trim($validated['rejected_reason'])),
+            'Penerimaan ditolak. Stok dikembalikan ke warehouse Modifikasi Ori.'
+        );
     }
 
     public function lookup(Request $request)

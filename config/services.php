@@ -67,4 +67,15 @@ return [
         'whatsapp' => env('LANDING_WHATSAPP', '6285353300103'),
     ],
 
+    /**
+     * Integrasi Purchase Order ke warehouse Modifikasi Ori (API partner).
+     * Token dibuat di server Modifikasi Ori: php artisan partner:setup 77R --name="77 Racing - 77R"
+     */
+    'modifikasi_ori' => [
+        'base_url' => env('MO_PARTNER_API_URL'), // contoh: https://modifikasiori.com/api/partner
+        'token' => env('MO_PARTNER_API_TOKEN'),
+        'timeout' => (int) env('MO_PARTNER_API_TIMEOUT', 20),
+        'warehouse_name' => env('MO_PARTNER_WAREHOUSE_NAME', 'Warehouse Modifikasi Ori'),
+    ],
+
 ];

@@ -27,6 +27,40 @@ class SpeedshopPurchaseOrder extends Model
         'rejected_at',
         'rejected_reason',
         'catatan',
+        'mo_status',
+        'mo_kode',
+        'mo_no_transaksi',
+        'mo_reason',
+        'mo_tagihan',
+        'mo_synced_at',
+        'mo_sync_error',
+        'received_at',
+        'received_by',
+    ];
+
+    /** Belum berhasil terkirim ke API Modifikasi Ori (bisa dikirim ulang, idempoten). */
+    public const MO_STATUS_SEND_FAILED = 'send_failed';
+
+    public const MO_STATUS_SUBMITTED = 'submitted';
+
+    public const MO_STATUS_APPROVED = 'approved';
+
+    public const MO_STATUS_REJECTED_BY_WAREHOUSE = 'rejected_by_warehouse';
+
+    public const MO_STATUS_CANCELLED = 'cancelled';
+
+    public const MO_STATUS_SHIPPED = 'shipped';
+
+    public const MO_STATUS_RECEIVED = 'received';
+
+    public const MO_STATUS_REJECTED_BY_PARTNER = 'rejected_by_partner';
+
+    /** Status final: tidak perlu disinkronkan lagi. */
+    public const MO_FINAL_STATUSES = [
+        self::MO_STATUS_REJECTED_BY_WAREHOUSE,
+        self::MO_STATUS_CANCELLED,
+        self::MO_STATUS_RECEIVED,
+        self::MO_STATUS_REJECTED_BY_PARTNER,
     ];
 
     protected function casts(): array
@@ -34,7 +68,41 @@ class SpeedshopPurchaseOrder extends Model
         return [
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
+            'mo_tagihan' => 'array',
+            'mo_synced_at' => 'datetime',
+            'received_at' => 'datetime',
         ];
+    }
+
+    /** PO yang dikirim ke warehouse Modifikasi Ori via API (bukan PO lama lokal). */
+    public function isModifikasiOriPo(): bool
+    {
+        return $this->mo_status !== null;
+    }
+
+    public function isMoFinal(): bool
+    {
+        return in_array($this->mo_status, self::MO_FINAL_STATUSES, true);
+    }
+
+    public function receiver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function moStatusLabel(): string
+    {
+        return match ($this->mo_status) {
+            self::MO_STATUS_SEND_FAILED => 'Gagal terkirim',
+            self::MO_STATUS_SUBMITTED => 'Menunggu diterima warehouse',
+            self::MO_STATUS_APPROVED => 'Diterima warehouse, menunggu pengiriman',
+            self::MO_STATUS_SHIPPED => 'Dikirim — menunggu konfirmasi penerimaan',
+            self::MO_STATUS_RECEIVED => 'Selesai — barang diterima',
+            self::MO_STATUS_REJECTED_BY_WAREHOUSE => 'Ditolak warehouse',
+            self::MO_STATUS_CANCELLED => 'Dibatalkan',
+            self::MO_STATUS_REJECTED_BY_PARTNER => 'Penerimaan ditolak',
+            default => '-',
+        };
     }
 
     public function speedshop(): BelongsTo
